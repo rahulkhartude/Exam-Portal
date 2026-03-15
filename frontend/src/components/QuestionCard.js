@@ -1,24 +1,71 @@
+// function QuestionCard({question,selected,handleAnswer}){
+
+// return(
+
+// <div className="question-card">
+
+// <h3>{question.question}</h3>
+
+// {question.options.map((opt,index)=>(
+// <div key={index}>
+
+// <input
+// type="radio"
+// checked={selected===opt}
+// onChange={()=>handleAnswer(opt)}
+// />
+
+// <label>{opt}</label>
+
+// </div>
+// ))}
+
+// </div>
+
+// )
+
+// }
+
+// export default QuestionCard
+
+
 function QuestionCard({question,selected,handleAnswer}){
 
 return(
 
-<div className="question-card">
+<div>
 
-<h3>{question.question}</h3>
+<h2 className="text-xl font-semibold mb-6">
 
-{question.options.map((opt,index)=>(
-<div key={index}>
+{question.question}
+
+</h2>
+
+<div className="space-y-3">
+
+{question.options.map((opt,index)=> (
+
+<label
+key={index}
+className={`block border p-3 rounded cursor-pointer 
+${selected===opt ? "bg-blue-100 border-blue-500" : ""}
+`}
+>
 
 <input
 type="radio"
+className="mr-2"
 checked={selected===opt}
 onChange={()=>handleAnswer(opt)}
 />
 
-<label>{opt}</label>
+{opt}
+
+</label>
+
+))}
 
 </div>
-))}
 
 </div>
 
