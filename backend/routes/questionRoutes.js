@@ -1,19 +1,21 @@
+
 // const express = require("express");
 // const router = express.Router();
 // const Question = require("../models/Question");
 
-
-// router.post("/admin/add-question", async (req, res) => {
-//     const question = new Question(req.body);
-//     await question.save();
-//     res.json(question);
-// });
-
+// // Get all questions
 // router.get("/", async (req, res) => {
-//   const questions = await Question.find();
-//   res.json(questions);
+//   try{
+//       const questions = await Question.find();
+//       res.json(questions);
+//   }
+//   catch{
+//     console.log("find not worked")
+//   }
+ 
 // });
 
+// // Optional public POST
 // router.post("/", async (req, res) => {
 //   const question = new Question(req.body);
 //   await question.save();
@@ -23,31 +25,159 @@
 // module.exports = router;
 
 
+
 const express = require("express");
 const router = express.Router();
 const Question = require("../models/Question");
 
-// Get all questions
-router.get("/", async (req, res) => {
-  try{
 
-      console.log("ques started");
-      const questions = await Question.find();
-     console.log("ques ended",questions);
-
-      res.json(questions);
-  }
-  catch{
-    console.log("find not worked")
-  }
- 
-});
-
-// Optional public POST
+// =======================
+// ✅ CREATE QUESTION
+// =======================
 router.post("/", async (req, res) => {
-  const question = new Question(req.body);
-  await question.save();
-  res.json(question);
+  try {
+    const { question, options, answer } = req.body;
+
+    // Validation
+    if (!question || !options || !answer) {
+      return res.status(400).json({ message: "All fields are required" });
+    }
+
+    if (!Array.isArray(options) || options.length < 2) {
+      return res.status(400).json({ message: "At least 2 options required" });
+    }
+
+    if (!options.includes(answer)) {
+      return res.status(400).json({
+        message: "Answer must be one of the options",
+      });
+    }
+
+    const newQuestion = new Question({
+      question,
+      options,
+      answer,
+    });
+
+    const savedQuestion = await newQuestion.save();
+
+    res.status(201).json(savedQuestion);
+
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: "Error creating question" });
+  }
 });
+
+
+// =======================
+// ✅ GET ALL QUESTIONS
+// =======================
+router.get("/", async (req, res) => {
+  try {
+    const questions = await Question.find();
+    res.json(questions);
+
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: "Error fetching questions" });
+  }
+});
+
+
+// =======================
+// ✅ GET SINGLE QUESTION
+// =======================
+router.get("/:id", async (req, res) => {
+  try {
+    const question = await Question.findById(req.params.id);
+
+    if (!question) {
+      return res.status(404).json({ message: "Question not found" });
+    }
+
+    res.json(question);
+
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: "Error fetching question" });
+  }
+});
+
+
+// =======================
+// ✅ UPDATE QUESTION
+// =======================
+router.put("/:id", async (req, res) => {
+  try {
+    const { question, options, answer } = req.body;
+
+    // Optional validation during update
+    if (options && answer && !options.includes(answer)) {
+      return res.status(400).json({
+        message: "Answer must match one of the options",
+      });
+    }
+
+    const updatedQuestion = await Question.findByIdAndUpdate(
+      req.params.id,
+      req.body,
+      { new: true }
+    );
+
+    if (!updatedQuestion) {
+      return res.status(404).json({ message: "Question not found" });
+    }
+
+    res.json(updatedQuestion);
+
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: "Error updating question" });
+  }
+});
+
+
+// =======================
+// ❌ DELETE QUESTION
+// =======================
+router.delete("/:id", async (req, res) => {
+  try {
+    const deleted = await Question.findByIdAndDelete(req.params.id);
+
+    if (!deleted) {
+      return res.status(404).json({ message: "Question not found" });
+    }
+
+    res.json({ message: "Question deleted successfully" });
+
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: "Error deleting question" });
+  }
+});
+
+
+// =======================
+// 🔐 SAFE API (NO ANSWERS)
+// =======================
+router.get("/public/all", async (req, res) => {
+  try {
+    const questions = await Question.find();
+
+    const safeQuestions = questions.map(q => ({
+      _id: q._id,
+      question: q.question,
+      options: q.options,
+    }));
+
+    res.json(safeQuestions);
+
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: "Error fetching public questions" });
+  }
+});
+
 
 module.exports = router;
