@@ -1,109 +1,208 @@
-import { useState } from "react"
-import API from "../services/api"
+
+import React, { useEffect, useState, useRef } from "react";
+import API from "../services/api";
 
 function AdminDashboard() {
+  const [questions, setQuestions] = useState([]);
+  const [question, setQuestion] = useState("");
+  const [options, setOptions] = useState(["", "", "", ""]);
+  const [answer, setAnswer] = useState("");
+  const [editId, setEditId] = useState(null);
 
-    const [question, setQuestion] = useState("")
-    const [options, setOptions] = useState(["", "", "", ""])
-    const [answer, setAnswer] = useState("")
+  // 🔥 REF for focus
+  const questionRef = useRef(null);
 
-    const handleOptionChange = (value, index) => {
+  // ================= SHUFFLE =================
+  const shuffleArray = (array) => {
+    return [...array].sort(() => Math.random() - 0.5);
+  };
 
-        const newOptions = [...options]
-        newOptions[index] = value
-        setOptions(newOptions)
-
+  // ================= FETCH =================
+  const fetchQuestions = async () => {
+    try {
+      const res = await API.get("/questions");
+      setQuestions(shuffleArray(res.data));
+    } catch (err) {
+      console.error(err);
     }
+  };
 
-    // const addQuestion=async()=>{
+  useEffect(() => {
+    fetchQuestions();
 
-    // await API.post("/admin/add-question",{
-    // question,
-    // options,
-    // answer
-    // })
+    // 🔥 Auto focus on load
+    questionRef.current?.focus();
+  }, []);
 
-    // alert("Question Added")
+  // ================= OPTIONS =================
+  const handleOptionChange = (value, index) => {
+    const newOptions = [...options];
+    newOptions[index] = value;
+    setOptions(newOptions);
+  };
 
-    // }
+  // ================= SUBMIT =================
+  const handleSubmit = async () => {
+    try {
+      const data = { question, options, answer };
 
+      if (editId) {
+        await API.put(`/questions/${editId}`, data);
+        setEditId(null);
+      } else {
+        await API.post("/questions", data);
+      }
 
-    const addQuestion = async () => {
+      // reset form
+      setQuestion("");
+      setOptions(["", "", "", ""]);
+      setAnswer("");
 
-        try {
+      // 🔥 focus again after submit
+      setTimeout(() => {
+        questionRef.current?.focus();
+      }, 0);
 
-            // console.log(  "que",question);
-            //      console.log("options",options);
-            //    console.log( "answer,",answer);
-            await API.post("/admin/add-question", {
-                question,
-                options,
-                answer
-            })
-
-            alert("Question Added Successfully")
-
-        } catch (err) {
-
-            console.log("admin dashboard catch called");
-            console.log(err)
-            alert("Error adding question")
-
-        }
-
+      fetchQuestions();
+    } catch (err) {
+      console.error(err);
+      alert("Error while saving question");
     }
+  };
 
-    return (
+  // ================= EDIT =================
+  const handleEdit = (q) => {
+    setQuestion(q.question);
+    setOptions(q.options);
+    setAnswer(q.answer);
+    setEditId(q._id);
 
-        <div className="p-10 bg-gray-100 min-h-screen">
+    // 🔥 focus on input
+    setTimeout(() => {
+      questionRef.current?.focus();
+    }, 0);
+  };
 
-            <h1 className="text-3xl font-bold mb-6">
-                Admin Dashboard
-            </h1>
+  // ================= DELETE =================
+  const handleDelete = async (id) => {
+    if (!window.confirm("Delete this question?")) return;
 
-            <div className="bg-white p-6 rounded shadow max-w-lg">
+    try {
+      await API.delete(`/questions/${id}`);
+      fetchQuestions();
+    } catch (err) {
+      console.error(err);
+    }
+  };
 
-                <input
-                    type="text"
-                    placeholder="Enter Question"
-                    className="border p-2 w-full mb-4"
-                    onChange={(e) => setQuestion(e.target.value)}
-                />
+  return (
+    <div className="p-10 bg-gray-100 min-h-screen">
+      <h1 className="text-3xl font-bold mb-6 text-center">
+        🧑‍💻 Admin Dashboard
+      </h1>
 
-                {options.map((opt, index) => (
+      {/* ================= FORM ================= */}
+      <div className="bg-white p-6 rounded shadow max-w-lg mx-auto mb-8">
+        <h2 className="text-xl font-semibold mb-4">
+          {editId ? "✏️ Edit Question" : "➕ Add Question"}
+        </h2>
 
-                    <input
-                        key={index}
-                        type="text"
-                        placeholder={`Option ${index + 1}`}
-                        className="border p-2 w-full mb-3"
-                        onChange={(e) => handleOptionChange(e.target.value, index)}
-                    />
+        <input
+          ref={questionRef} // 🔥 focus ref
+          type="text"
+          placeholder="Enter Question"
+          className="border p-2 w-full mb-4 rounded"
+          value={question}
+          onChange={(e) => setQuestion(e.target.value)}
+        />
 
-                ))}
+        {options.map((opt, index) => (
+          <input
+            key={index}
+            type="text"
+            placeholder={`Option ${index + 1}`}
+            className="border p-2 w-full mb-3 rounded"
+            value={opt}
+            onChange={(e) =>
+              handleOptionChange(e.target.value, index)
+            }
+          />
+        ))}
 
-                <input
-                    type="text"
-                    placeholder="Correct Answer"
-                    className="border p-2 w-full mb-4"
-                    onChange={(e) => setAnswer(e.target.value)}
-                />
+        {/* Select Answer */}
+        <select
+          className="border p-2 w-full mb-4 rounded"
+          value={answer}
+          onChange={(e) => setAnswer(e.target.value)}
+        >
+          <option value="">Select Correct Answer</option>
+          {options.map((opt, i) => (
+            <option key={i} value={opt}>
+              {opt || `Option ${i + 1}`}
+            </option>
+          ))}
+        </select>
 
+        <button
+          onClick={handleSubmit}
+          className="bg-blue-600 text-white px-4 py-2 rounded w-full hover:bg-blue-700"
+        >
+          {editId ? "Update Question" : "Add Question"}
+        </button>
+      </div>
+
+      {/* ================= LIST ================= */}
+      <div className="max-w-3xl mx-auto">
+        <h2 className="text-xl font-semibold mb-4">
+          📋 All Questions
+        </h2>
+
+        {questions.map((q) => (
+          <div
+            key={q._id}
+            className="bg-white p-5 rounded shadow mb-4"
+          >
+            <div className="flex justify-between">
+              <h3 className="font-semibold text-lg">
+                {q.question}
+              </h3>
+
+              <div>
                 <button
-                    onClick={addQuestion}
-                    className="bg-blue-600 text-white px-4 py-2 rounded"
+                  onClick={() => handleEdit(q)}
+                  className="bg-yellow-400 px-3 py-1 rounded mr-2"
                 >
-
-                    Add Question
-
+                  Edit
                 </button>
 
+                <button
+                  onClick={() => handleDelete(q._id)}
+                  className="bg-red-500 text-white px-3 py-1 rounded"
+                >
+                  Delete
+                </button>
+              </div>
             </div>
 
-        </div>
-
-    )
-
+            <ul className="mt-3">
+              {shuffleArray(q.options).map((opt, i) => (
+                <li
+                  key={i}
+                  className={`p-2 rounded mb-1 ${
+                    opt === q.answer
+                      ? "bg-green-100 text-green-700 font-semibold"
+                      : "bg-gray-100"
+                  }`}
+                >
+                  {opt} {opt === q.answer && "✅"}
+                </li>
+              ))}
+            </ul>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
 }
 
-export default AdminDashboard
+export default AdminDashboard;

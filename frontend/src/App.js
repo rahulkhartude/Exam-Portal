@@ -23,6 +23,7 @@ return(
 <Route path="/result" element={<Result/>}/>
 <Route path="/admin" element={<AdminDashboard/>} />
 
+
 </Routes>
 
 </BrowserRouter>
