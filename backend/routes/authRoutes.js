@@ -13,7 +13,8 @@ router.post("/register", async (req, res) => {
   const user = new User({
     name,
     email,
-    password: hashed
+    password: hashed,
+    role:"student"  // Default role is "user". Admins should be created manually in the database.
   });
 
   await user.save();
@@ -28,10 +29,10 @@ router.post("/login", async (req, res) => {
   if (!user) return res.status(400).json({ message: "User not found" });
 
   // ✅ If using plain password (temporary)
-  const valid = password == user.password;
+  // const valid = password == user.password;
 
   // 🔐 If using bcrypt (recommended)
-  // const valid = await bcrypt.compare(password, user.password);
+  const valid = await bcrypt.compare(password, user.password);
 
   if (!valid) return res.status(400).json({ message: "Wrong password" });
 

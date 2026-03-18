@@ -1,69 +1,3 @@
-// import { useState } from "react";
-// import API from "../services/api";
-// import { useNavigate } from "react-router-dom";
-
-// function Login() {
-//     const navigate = useNavigate();
-//     const [email, setEmail] = useState("");
-//     const [password, setPassword] = useState("");
-
-//     const login = async () => {
-//         try {
-//             const res = await API.post("/auth/login", { email, password });
-
-//             const { token, user } = res.data;
-
-//             // Save data
-//             localStorage.setItem("token", token);
-//             localStorage.setItem("user", JSON.stringify(user));
-
-//             // Role-based navigation
-//             if (user.role === "admin") {
-//                 navigate("/admin");
-//             } else if (user.role === "student") {
-//                 navigate("/student");
-//             }
-
-//         } catch (err) {
-//             console.log(err);
-//             alert("Login failed");
-//         }
-//     };
-
-//     return (
-//         <div className="flex items-center justify-center h-screen bg-gray-100">
-//             <div className="bg-white p-8 rounded shadow w-80">
-//                 <h2 className="text-2xl font-bold mb-6 text-center">
-//                     Live Exam Portal
-//                 </h2>
-
-//                 <input
-//                     type="email"
-//                     placeholder="Email"
-//                     className="border p-2 w-full mb-3"
-//                     onChange={(e) => setEmail(e.target.value)}
-//                 />
-
-//                 <input
-//                     type="password"
-//                     placeholder="Password"
-//                     className="border p-2 w-full mb-4"
-//                     onChange={(e) => setPassword(e.target.value)}
-//                 />
-
-//                 <button
-//                     onClick={login}
-//                     className="bg-blue-600 text-white w-full p-2 rounded"
-//                 >
-//                     Login
-//                 </button>
-//             </div>
-//         </div>
-//     );
-// }
-
-// export default Login;
-
 
 import { useState } from "react";
 import API from "../services/api";
@@ -120,6 +54,10 @@ function Login() {
         }
     };
 
+    const handleRegister = async () => {
+        navigate("/register");
+    }   
+
     return (
         <div className="flex items-center justify-center h-screen bg-gray-100">
             <div className="bg-white p-8 rounded shadow w-80">
@@ -153,6 +91,7 @@ function Login() {
                 >
                     {loading ? "Logging in..." : "Login"}
                 </button>
+                <p className="mt-4">Don't have an account? <span onClick={handleRegister} className="text-blue-600 font-bold" >Register </span></p>
             </div>
         </div>
     );
