@@ -20,7 +20,7 @@ function AdminDashboard() {
   // ================= FETCH =================
   const fetchQuestions = async () => {
     try {
-      const res = await API.get("/questions");
+      const res = await API.get("/admin");
       setQuestions(shuffleArray(res.data));
     } catch (err) {
       console.error(err);
@@ -40,6 +40,14 @@ function AdminDashboard() {
     newOptions[index] = value;
     setOptions(newOptions);
   };
+
+const handleBack = () => {
+  setQuestion("");
+  setOptions(["", "", "", ""]);
+  setAnswer("");
+  setEditId(null);
+};
+
 
   // ================= SUBMIT =================
   const handleSubmit = async () => {
@@ -149,12 +157,22 @@ function AdminDashboard() {
         >
           {editId ? "Update Question" : "Add Question"}
         </button>
+
+     {editId && 
+       <button
+          onClick={handleBack}
+          className="bg-red-600 text-white px-4 py-2 rounded w-full mt-3"
+        >
+          Back
+        </button> 
+}
+
       </div>
 
       {/* ================= LIST ================= */}
       <div className="max-w-3xl mx-auto">
         <h2 className="text-xl font-semibold mb-4">
-          📋 All Questions
+          📋 All Questions 
         </h2>
 
         {questions.map((q) => (

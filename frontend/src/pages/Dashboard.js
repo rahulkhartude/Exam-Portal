@@ -1,26 +1,26 @@
 import Navbar from '../components/Navbar'
 
-function Dashboard(){
+function Dashboard() {
 
-return(
+    return (
 
-<div>
+        <div>
 
-<Navbar/>
+            <Navbar />
 
-<div className="dashboard">
+            <div className="dashboard">
 
-<h2>Welcome to Live Exam</h2>
+                <h2>Welcome to Live Exam</h2>
 
-<a href="/exam">
-<button>Start Exam</button>
-</a>
+                <a href="/exam">
+                    <button>Start Exam</button>
+                </a>
 
-</div>
+            </div>
 
-</div>
+        </div>
 
-)
+    )
 
 }
 
