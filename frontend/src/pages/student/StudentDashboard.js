@@ -1,6 +1,6 @@
-import Navbar from '../components/Navbar'
+import Navbar from '../../components/Navbar'
 
-function Dashboard() {
+function StudentDashboard() {
 
     return (
 
@@ -24,4 +24,4 @@ function Dashboard() {
 
 }
 
-export default Dashboard
+export default StudentDashboard

@@ -24,19 +24,28 @@ router.post("/register", async (req, res) => {
 router.post("/login", async (req, res) => {
 
   const { email, password } = req.body;
-
   const user = await User.findOne({ email });
+  if (!user) return res.status(400).json({ message: "User not found" });
 
-  if (!user) return res.status(400).json("User not found");
+  // ✅ If using plain password (temporary)
+  const valid = password == user.password;
 
-  const valid = await bcrypt.compare(password, user.password);
+  // 🔐 If using bcrypt (recommended)
+  // const valid = await bcrypt.compare(password, user.password);
 
-  if (!valid) return res.status(400).json("Wrong password");
+  if (!valid) return res.status(400).json({ message: "Wrong password" });
 
   const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET);
-
-  res.json({ token });
+   
+  // ✅ 🔥 SEND USER ALSO
+  res.json({
+    token,
+    user: {
+      id: user._id,
+      email: user.email,
+      role: user.role   // IMPORTANT
+    }
+  });
 });
-
 
 module.exports = router;

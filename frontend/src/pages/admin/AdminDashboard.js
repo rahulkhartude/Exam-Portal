@@ -1,6 +1,6 @@
 
 import React, { useEffect, useState, useRef } from "react";
-import API from "../services/api";
+import API from "../../services/api";
 
 function AdminDashboard() {
   const [questions, setQuestions] = useState([]);

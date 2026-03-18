@@ -1,106 +1,161 @@
-// import {useState} from "react"
-// import API from "../services/api"
+// import { useState } from "react";
+// import API from "../services/api";
+// import { useNavigate } from "react-router-dom";
 
-// function Login(){
+// function Login() {
+//     const navigate = useNavigate();
+//     const [email, setEmail] = useState("");
+//     const [password, setPassword] = useState("");
 
-// const [email,setEmail]=useState("")
-// const [password,setPassword]=useState("")
+//     const login = async () => {
+//         try {
+//             const res = await API.post("/auth/login", { email, password });
 
-// const login=async()=>{
+//             const { token, user } = res.data;
 
-// const res=await API.post("/auth/login",{
-// email,
-// password
-// })
+//             // Save data
+//             localStorage.setItem("token", token);
+//             localStorage.setItem("user", JSON.stringify(user));
 
-// localStorage.setItem("token",res.data.token)
+//             // Role-based navigation
+//             if (user.role === "admin") {
+//                 navigate("/admin");
+//             } else if (user.role === "student") {
+//                 navigate("/student");
+//             }
 
-// window.location="/dashboard"
+//         } catch (err) {
+//             console.log(err);
+//             alert("Login failed");
+//         }
+//     };
 
+//     return (
+//         <div className="flex items-center justify-center h-screen bg-gray-100">
+//             <div className="bg-white p-8 rounded shadow w-80">
+//                 <h2 className="text-2xl font-bold mb-6 text-center">
+//                     Live Exam Portal
+//                 </h2>
+
+//                 <input
+//                     type="email"
+//                     placeholder="Email"
+//                     className="border p-2 w-full mb-3"
+//                     onChange={(e) => setEmail(e.target.value)}
+//                 />
+
+//                 <input
+//                     type="password"
+//                     placeholder="Password"
+//                     className="border p-2 w-full mb-4"
+//                     onChange={(e) => setPassword(e.target.value)}
+//                 />
+
+//                 <button
+//                     onClick={login}
+//                     className="bg-blue-600 text-white w-full p-2 rounded"
+//                 >
+//                     Login
+//                 </button>
+//             </div>
+//         </div>
+//     );
 // }
 
-// return(
+// export default Login;
 
-// <div className="login">
 
-// <h2>Login</h2>
+import { useState } from "react";
+import API from "../services/api";
+import { useNavigate } from "react-router-dom";
 
-// <input
-// placeholder="Email"
-// onChange={(e)=>setEmail(e.target.value)}
-// />
+function Login() {
+    const navigate = useNavigate();
 
-// <input
-// type="password"
-// placeholder="Password"
-// onChange={(e)=>setPassword(e.target.value)}
-// />
+    const [email, setEmail] = useState("");
+    const [password, setPassword] = useState("");
+    const [loading, setLoading] = useState(false);
 
-// <button onClick={login}>Login</button>
+    const login = async () => {
+        // ✅ Validation
+        if (!email || !password) {
+            alert("Please enter email and password");
+            return;
+        }
 
-// </div>
+        try {
+            setLoading(true);
 
-// )
+            const res = await API.post("/auth/login", { email, password });
 
-// }
+            const { token, user } = res.data;
 
-// export default Login
+            console.log("Login Response:", res.data); // 🔍 Debug log
 
-import {useState} from "react"
-import API from "../services/api"
 
-function Login(){
+            // ✅ Safety check
+            if (!user || !user.role) {
+                alert("Invalid response from server");
+                return;
+            }
 
-const [email,setEmail] = useState("")
-const [password,setPassword] = useState("")
+            // ✅ Save data
+            localStorage.setItem("token", token);
+            localStorage.setItem("user", JSON.stringify(user));
 
-const login = async()=>{
+            // ✅ Role-based navigation
+            if (user.role === "admin") {
+                navigate("/admin");
+            } else if (user.role === "student") {
+                navigate("/student");
+            } else {
+                navigate("/"); // fallback
+            }
 
-await API.post("/auth/login",{email,password})
+        } catch (err) {
+            console.log(err);
+            alert(err?.response?.data?.message || "Login failed");
+        } finally {
+            setLoading(false);
+        }
+    };
 
-window.location="/dashboard"
+    return (
+        <div className="flex items-center justify-center h-screen bg-gray-100">
+            <div className="bg-white p-8 rounded shadow w-80">
+                <h2 className="text-2xl font-bold mb-6 text-center">
+                    Live Exam Portal
+                </h2>
 
+                <input
+                    type="email"
+                    placeholder="Email"
+                    className="border p-2 w-full mb-3"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                />
+
+                <input
+                    type="password"
+                    placeholder="Password"
+                    className="border p-2 w-full mb-4"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                />
+
+                <button
+                    type="button"
+                    onClick={login}
+                    disabled={loading}
+                    className={`w-full p-2 rounded text-white ${
+                        loading ? "bg-gray-400" : "bg-blue-600"
+                    }`}
+                >
+                    {loading ? "Logging in..." : "Login"}
+                </button>
+            </div>
+        </div>
+    );
 }
 
-return(
-
-<div className="flex items-center justify-center h-screen bg-gray-100">
-
-<div className="bg-white p-8 rounded shadow w-80">
-
-<h2 className="text-2xl font-bold mb-6 text-center">
-Live Exam Portal
-</h2>
-
-<input
-type="email"
-placeholder="Email"
-className="border p-2 w-full mb-3"
-onChange={(e)=>setEmail(e.target.value)}
-/>
-
-<input
-type="password"
-placeholder="Password"
-className="border p-2 w-full mb-4"
-onChange={(e)=>setPassword(e.target.value)}
-/>
-
-<button
-onClick={login}
-className="bg-blue-600 text-white w-full p-2 rounded"
->
-
-Login
-
-</button>
-
-</div>
-
-</div>
-
-)
-
-}
-
-export default Login
+export default Login;

@@ -1,12 +1,12 @@
 
 import { useState, useEffect } from "react"
 import { useNavigate } from "react-router-dom";
-import API from "../services/api"
+import API from "../../services/api"
 
-import Navbar from "../components/Navbar"
-import Timer from "../components/Timer"
-import QuestionCard from "../components/QuestionCard"
-import QuestionPalette from "../components/QuestionPalette"
+import Navbar from "../../components/Navbar"
+import Timer from "../../components/Timer"
+import QuestionCard from "../../components/QuestionCard"
+import QuestionPalette from "../../components/QuestionPalette"
 
 function Exam() {
     const EXAMTIME = process.env.REACT_APP_EXAMTIME;

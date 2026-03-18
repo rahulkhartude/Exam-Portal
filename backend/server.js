@@ -22,7 +22,9 @@ app.use(express.json());
 
 // Routes
 app.use("/api/auth", require("./routes/authRoutes"));
-app.use("/api/admin", require("./routes/questionRoutes"));      
+app.use("/api/admin", require("./routes/questionRoutes")); 
+
+
 app.get("/", (req, res) => {
     res.send("Live Exam Portal Backend Running");
 });
