@@ -1,31 +1,4 @@
 
-// const express = require("express");
-// const router = express.Router();
-// const Question = require("../models/Question");
-
-// // Get all questions
-// router.get("/", async (req, res) => {
-//   try{
-//       const questions = await Question.find();
-//       res.json(questions);
-//   }
-//   catch{
-//     console.log("find not worked")
-//   }
- 
-// });
-
-// // Optional public POST
-// router.post("/", async (req, res) => {
-//   const question = new Question(req.body);
-//   await question.save();
-//   res.json(question);
-// });
-
-// module.exports = router;
-
-
-
 const express = require("express");
 const router = express.Router();
 const Question = require("../models/Question");

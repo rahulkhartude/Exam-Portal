@@ -24,7 +24,6 @@ app.use(express.json());
 app.use("/api/auth", require("./routes/authRoutes"));
 app.use("/api/admin", require("./routes/questionRoutes"));      
 app.get("/", (req, res) => {
-    console.log("/ route called in the server.js")
     res.send("Live Exam Portal Backend Running");
 });
 

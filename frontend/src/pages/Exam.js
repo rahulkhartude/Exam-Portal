@@ -9,7 +9,7 @@ import QuestionCard from "../components/QuestionCard"
 import QuestionPalette from "../components/QuestionPalette"
 
 function Exam() {
-
+    const EXAMTIME = process.env.REACT_APP_EXAMTIME;
     const navigate = useNavigate();
     const [questions, setQuestions] = useState([])
     const [current, setCurrent] = useState(0)
@@ -60,7 +60,7 @@ function Exam() {
             <div className="max-w-7xl mx-auto p-5">
 
                 <div className="flex justify-end mb-4">
-                    <Timer duration={10} onTimeUp={submitExam} />
+                    <Timer duration={EXAMTIME} onTimeUp={submitExam} />
                 </div>
 
                 <div className="grid grid-cols-4 gap-5">
