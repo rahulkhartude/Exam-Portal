@@ -1,75 +1,44 @@
-// function QuestionCard({question,selected,handleAnswer}){
 
-// return(
+function QuestionCard({ question, selected, handleAnswer }) {
 
-// <div className="question-card">
+    return (
 
-// <h3>{question.question}</h3>
+        <div>
 
-// {question.options.map((opt,index)=>(
-// <div key={index}>
+            <h2 className="text-xl font-semibold mb-6">
 
-// <input
-// type="radio"
-// checked={selected===opt}
-// onChange={()=>handleAnswer(opt)}
-// />
+                {question.question}
+            </h2>
 
-// <label>{opt}</label>
+            <div className="space-y-3">
 
-// </div>
-// ))}
+                {question.options.map((opt, index) => (
 
-// </div>
+                    <label
+                        key={index}
+                        className={`block border p-3 rounded cursor-pointer 
+                            ${selected === opt ? "bg-blue-100 border-blue-500" : ""}
+                            `}
+                    >
 
-// )
+                        <input
+                            type="radio"
+                            className="mr-2"
+                            checked={selected === opt}
+                            onChange={() => handleAnswer(opt)}
+                        />
 
-// }
+                        {opt}
 
-// export default QuestionCard
+                    </label>
 
+                ))}
 
-function QuestionCard({question,selected,handleAnswer}){
+            </div>
 
-return(
+        </div>
 
-<div>
-
-<h2 className="text-xl font-semibold mb-6">
-
-{question.question}
-
-</h2>
-
-<div className="space-y-3">
-
-{question.options.map((opt,index)=> (
-
-<label
-key={index}
-className={`block border p-3 rounded cursor-pointer 
-${selected===opt ? "bg-blue-100 border-blue-500" : ""}
-`}
->
-
-<input
-type="radio"
-className="mr-2"
-checked={selected===opt}
-onChange={()=>handleAnswer(opt)}
-/>
-
-{opt}
-
-</label>
-
-))}
-
-</div>
-
-</div>
-
-)
+    )
 
 }
 

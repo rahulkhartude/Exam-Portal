@@ -1,43 +1,43 @@
 // export default Result
 import { useEffect, useState } from "react"
 
-function Result(){
+function Result() {
 
-const [score,setScore] = useState(0)
+    const [score, setScore] = useState(0)
 
-useEffect(()=>{
+    useEffect(() => {
 
-const savedScore = localStorage.getItem("score")
+        const savedScore = localStorage.getItem("score")
 
-if(savedScore){
-setScore(savedScore)
-}
+        if (savedScore) {
+            setScore(savedScore)
+        }
 
-},[])
+    }, [])
 
-return(
+    return (
 
-<div className="flex items-center justify-center h-screen bg-gray-100">
+        <div className="flex items-center justify-center h-screen bg-gray-100">
 
-<div className="bg-white p-10 rounded shadow text-center">
+            <div className="bg-white p-10 rounded shadow text-center">
 
-<h1 className="text-3xl font-bold mb-6">
-Exam Completed
-</h1>
+                <h1 className="text-3xl font-bold mb-6">
+                    Exam Completed
+                </h1>
 
-<h2 className="text-xl mb-4">
-Your Score
-</h2>
+                <h2 className="text-xl mb-4">
+                    Your Score
+                </h2>
 
-<div className="text-5xl font-bold text-blue-600">
-{score}
-</div>
+                <div className="text-5xl font-bold text-blue-600">
+                    {score}
+                </div>
 
-</div>
+            </div>
 
-</div>
+        </div>
 
-)
+    )
 
 }
 

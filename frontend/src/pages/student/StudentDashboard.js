@@ -29,8 +29,8 @@ function StudentDashboard() {
           </h2>
 
           {/* ✅ Student Name */}
-          <p className="text-lg text-gray-700 mb-6">
-            {user?.name || "Student"}
+          <p className="text-sm text-gray-700 mb-6">
+            Ready to start the Exam? Click the button below to begin. Good luck!
           </p>
 
           {/* Start Exam Button */}

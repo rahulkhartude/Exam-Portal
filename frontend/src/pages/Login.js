@@ -24,9 +24,6 @@ function Login() {
 
             const { token, user } = res.data;
 
-            console.log("Login Response:", res.data); // 🔍 Debug log
-
-
             // ✅ Safety check
             if (!user || !user.role) {
                 alert("Invalid response from server");

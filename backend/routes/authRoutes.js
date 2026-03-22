@@ -26,6 +26,7 @@ router.post("/login", async (req, res) => {
 
   const { email, password } = req.body;
   const user = await User.findOne({ email });
+ 
   if (!user) return res.status(400).json({ message: "User not found" });
 
   // ✅ If using plain password (temporary)
@@ -36,15 +37,16 @@ router.post("/login", async (req, res) => {
 
   if (!valid) return res.status(400).json({ message: "Wrong password" });
 
-  const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET);
+  const token = jwt.sign({ id: user._id,name: user.name }, process.env.JWT_SECRET,{ expiresIn: "1h" });
    
   // ✅ 🔥 SEND USER ALSO
   res.json({
     token,
     user: {
       id: user._id,
+      name: user.name,
       email: user.email,
-      role: user.role   // IMPORTANT
+      role: user.role   
     }
   });
 });
