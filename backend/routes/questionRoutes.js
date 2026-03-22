@@ -2,12 +2,13 @@
 const express = require("express");
 const router = express.Router();
 const Question = require("../models/Question");
+const auth = require("../middleware/auth");
 
 
 // =======================
 // ✅ CREATE QUESTION
 // =======================
-router.post("/", async (req, res) => {
+router.post("/", auth,async (req, res) => {
   try {
     const { question, options, answer } = req.body;
 
@@ -46,9 +47,12 @@ router.post("/", async (req, res) => {
 // =======================
 // ✅ GET ALL QUESTIONS
 // =======================
-router.get("/", async (req, res) => {
+router.get("/",auth, async (req, res) => {
+
+  console.log("GET /api/admin - User:"); // Debugging line to check req.user
   try {
     const questions = await Question.find();
+    console.log("questions", questions);
     res.json(questions);
 
   } catch (err) {
@@ -61,7 +65,7 @@ router.get("/", async (req, res) => {
 // =======================
 // ✅ GET SINGLE QUESTION
 // =======================
-router.get("/:id", async (req, res) => {
+router.get("/:id",auth, async (req, res) => {
   try {
     const question = await Question.findById(req.params.id);
 
@@ -81,7 +85,7 @@ router.get("/:id", async (req, res) => {
 // =======================
 // ✅ UPDATE QUESTION
 // =======================
-router.put("/:id", async (req, res) => {
+router.put("/:id",auth, async (req, res) => {
   try {
     const { question, options, answer } = req.body;
 
@@ -114,7 +118,7 @@ router.put("/:id", async (req, res) => {
 // =======================
 // ❌ DELETE QUESTION
 // =======================
-router.delete("/:id", async (req, res) => {
+router.delete("/:id",auth, async (req, res) => {
   try {
     const deleted = await Question.findByIdAndDelete(req.params.id);
 
@@ -134,7 +138,7 @@ router.delete("/:id", async (req, res) => {
 // =======================
 // 🔐 SAFE API (NO ANSWERS)
 // =======================
-router.get("/public/all", async (req, res) => {
+router.get("/public/all",auth, async (req, res) => {
   try {
     const questions = await Question.find();
 

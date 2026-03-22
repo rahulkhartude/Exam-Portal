@@ -18,10 +18,20 @@ function Exam() {
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    API.get("/admin")
-      .then((res) => setQuestions(res.data))
-      .catch((err) => console.log(err));
-  }, []);
+  API.get("/admin", {
+    headers: {
+      Authorization: `Bearer ${localStorage.getItem("token")}`,
+    },
+  })
+    .then((res) => setQuestions(res.data))
+    .catch((err) => console.log(err));
+}, []);
+   
+  const user = JSON.parse(localStorage.getItem("user"));
+  if (!user) {
+    navigate("/login");
+    return;
+  }
 
   const handleAnswer = (option) => {
     setAnswers({
@@ -39,11 +49,18 @@ function Exam() {
         selectedAnswer: answers[key],
       }));
 
-      const res = await API.post("/result/submit", {
-        answers: formattedAnswers,
-        user : JSON.parse(localStorage.getItem("user"))
-      });
-
+const res = await API.post(
+  "/result/submit",
+  {
+    answers: formattedAnswers,
+    user: JSON.parse(localStorage.getItem("user")),
+  },
+  {
+    headers: {
+      Authorization: `Bearer ${localStorage.getItem("token")}`,
+    },
+  }
+);
       alert("Exam Submitted Successfully");
 
       localStorage.setItem("score", res.data.score);

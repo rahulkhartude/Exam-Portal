@@ -4,9 +4,10 @@ const router = express.Router();
 
 const Result = require("../models/Result");
 const Question = require("../models/Question");
+const auth = require("../middleware/auth");
 
 // POST /api/result/submit
-router.post("/submit", async (req, res) => {
+router.post("/submit",auth ,async (req, res) => {
 
   try {
 

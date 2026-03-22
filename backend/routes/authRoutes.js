@@ -29,9 +29,6 @@ router.post("/login", async (req, res) => {
  
   if (!user) return res.status(400).json({ message: "User not found" });
 
-  // ✅ If using plain password (temporary)
-  // const valid = password == user.password;
-
   // 🔐 If using bcrypt (recommended)
   const valid = await bcrypt.compare(password, user.password);
 

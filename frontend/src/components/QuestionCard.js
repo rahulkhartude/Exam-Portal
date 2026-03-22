@@ -1,6 +1,10 @@
 
 function QuestionCard({ question, selected, handleAnswer }) {
 
+    console.log("QuestionCard rendered with question: ", question);
+        console.log("QuestionCard rendered with question: ", selected);
+
+
     return (
 
         <div>
