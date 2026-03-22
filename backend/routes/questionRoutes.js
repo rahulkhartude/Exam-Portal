@@ -135,26 +135,6 @@ router.delete("/:id",auth, async (req, res) => {
 });
 
 
-// =======================
-// 🔐 SAFE API (NO ANSWERS)
-// =======================
-router.get("/public/all",auth, async (req, res) => {
-  try {
-    const questions = await Question.find();
-
-    const safeQuestions = questions.map(q => ({
-      _id: q._id,
-      question: q.question,
-      options: q.options,
-    }));
-
-    res.json(safeQuestions);
-
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ message: "Error fetching public questions" });
-  }
-});
 
 
 module.exports = router;
