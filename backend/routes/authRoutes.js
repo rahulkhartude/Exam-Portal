@@ -26,6 +26,7 @@ router.post("/login", async (req, res) => {
 
   const { email, password } = req.body;
   const user = await User.findOne({ email });
+  console.log("Login attempt for email:", email); // Debugging log
  
   if (!user) return res.status(400).json({ message: "User not found" });
 
