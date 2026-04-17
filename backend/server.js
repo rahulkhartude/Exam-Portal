@@ -12,10 +12,13 @@ connectDB();
 const app = express();
 
 // Middleware
-// app.use(cors());
-app.use(cors({
-  origin: "http://localhost:3000" // Only allow requests from this specific port
-}));
+app.use(cors());
+// app.use(cors({
+//   origin: "http://localhost:3000" // Only allow requests from this specific port
+// }
+// ));
+
+
 app.use(express.json());
 
 // Routes
