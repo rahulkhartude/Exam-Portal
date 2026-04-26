@@ -1,6 +1,6 @@
 
 import { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate,useLocation } from "react-router-dom";
 import API from "../../services/api";
 
 import Navbar from "../../components/Navbar";
@@ -11,11 +11,36 @@ import QuestionPalette from "../../components/QuestionPalette";
 function Exam() {
   const EXAMTIME = process.env.REACT_APP_EXAMTIME;
   const navigate = useNavigate();
+  const location = useLocation();
 
   const [questions, setQuestions] = useState([]);
   const [current, setCurrent] = useState(0);
   const [answers, setAnswers] = useState({});
   const [loading, setLoading] = useState(false);
+
+
+
+  useEffect(() => {
+    const handleVisibility = () => {
+      if (document.visibilityState === "hidden") {
+        const token = localStorage.getItem("token");
+        
+
+        // logout only if logged in
+        if (token) {
+          localStorage.removeItem("token");
+          localStorage.removeItem("user");
+          navigate("/login");
+        }
+      }
+    };
+
+    document.addEventListener("visibilitychange", handleVisibility);
+
+    return () => {
+      document.removeEventListener("visibilitychange", handleVisibility);
+    };
+  }, [navigate, location]);
 
   useEffect(() => {
   API.get("/admin", {

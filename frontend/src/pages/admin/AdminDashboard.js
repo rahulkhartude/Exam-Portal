@@ -1,5 +1,6 @@
 
 import React, { useEffect, useState, useRef } from "react";
+import { useNavigate, useLocation } from "react-router-dom";
 import API from "../../services/api";
 
 function AdminDashboard() {
@@ -8,6 +9,30 @@ function AdminDashboard() {
   const [options, setOptions] = useState(["", "", "", ""]);
   const [answer, setAnswer] = useState("");
   const [editId, setEditId] = useState(null);
+  const navigate = useNavigate();
+  const location = useLocation();
+
+  useEffect(() => {
+    const handleVisibility = () => {
+      if (document.visibilityState === "hidden") {
+        const token = localStorage.getItem("token");
+        
+
+        // logout only if logged in
+        if (token) {
+          localStorage.removeItem("token");
+          localStorage.removeItem("user");
+          navigate("/login");
+        }
+      }
+    };
+
+    document.addEventListener("visibilitychange", handleVisibility);
+
+    return () => {
+      document.removeEventListener("visibilitychange", handleVisibility);
+    };
+  }, [navigate, location]);
 
   // 🔥 REF for focus
   const questionRef = useRef(null);

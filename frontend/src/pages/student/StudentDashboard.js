@@ -1,9 +1,34 @@
 
 import Navbar from "../../components/Navbar";
-import { useNavigate } from "react-router-dom";
+import { useEffect } from "react";
+import { useNavigate, useLocation } from "react-router-dom";
 
 function StudentDashboard() {
   const navigate = useNavigate();
+  const location = useLocation();
+
+  useEffect(() => {
+    const handleVisibility = () => {
+      if (document.visibilityState === "hidden") {
+        const token = localStorage.getItem("token");
+        
+
+        // logout only if logged in
+        if (token) {
+          localStorage.removeItem("token");
+          localStorage.removeItem("user");
+          navigate("/login");
+        }
+      }
+    };
+
+    document.addEventListener("visibilitychange", handleVisibility);
+
+    return () => {
+      document.removeEventListener("visibilitychange", handleVisibility);
+    };
+  }, [navigate, location]);
+
 
   // ✅ Get user from localStorage
   const user = JSON.parse(localStorage.getItem("user"));
@@ -13,6 +38,8 @@ function StudentDashboard() {
     localStorage.removeItem("user");
     navigate("/login");
   };
+
+
 
   return (
     <div className="min-h-screen bg-gray-100">
