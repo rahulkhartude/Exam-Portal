@@ -20,27 +20,63 @@ function Exam() {
 
 
 
-  useEffect(() => {
-    const handleVisibility = () => {
-      if (document.visibilityState === "hidden") {
-        const token = localStorage.getItem("token");
+  // useEffect(() => {
+  //   const handleVisibility = () => {
+  //     if (document.visibilityState === "hidden") {
+  //       const token = localStorage.getItem("token");
         
 
-        // logout only if logged in
-        if (token) {
-          localStorage.removeItem("token");
-          localStorage.removeItem("user");
-          navigate("/login");
-        }
-      }
-    };
+  //       // logout only if logged in
+  //       if (token) {
+  //         localStorage.removeItem("token");
+  //         localStorage.removeItem("user");
+  //         navigate("/login");
+  //       }
+  //     }
+  //   };
 
-    document.addEventListener("visibilitychange", handleVisibility);
+  //   document.addEventListener("visibilitychange", handleVisibility);
 
-    return () => {
-      document.removeEventListener("visibilitychange", handleVisibility);
-    };
-  }, [navigate, location]);
+  //   return () => {
+  //     document.removeEventListener("visibilitychange", handleVisibility);
+  //   };
+  // }, [navigate, location]);
+
+  useEffect(() => {
+  const logoutUser = () => {
+    const token = localStorage.getItem("token");
+
+    if (token) {
+      console.log("Logout Triggered");
+
+      localStorage.removeItem("token");
+      localStorage.removeItem("user");
+
+      window.location.replace("/login");
+    }
+  };
+
+  const handleVisibility = () => {
+    console.log(document.visibilityState);
+
+    if (document.visibilityState === "hidden") {
+      logoutUser();
+    }
+  };
+
+  const handleBlur = () => {
+    logoutUser();
+  };
+
+  document.addEventListener("visibilitychange", handleVisibility);
+  window.addEventListener("blur", handleBlur);
+
+  return () => {
+    document.removeEventListener("visibilitychange", handleVisibility);
+    window.removeEventListener("blur", handleBlur);
+  };
+}, []);
+
 
   useEffect(() => {
   API.get("/admin", {

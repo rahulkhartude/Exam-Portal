@@ -13,7 +13,7 @@ const app = express();
 
 // Middleware
 const allowedOrigins = [
-  "http://localhost:5050",
+  "http://localhost:3000",
   "https://examportal-sooty.vercel.app"
 ];
 app.use(
