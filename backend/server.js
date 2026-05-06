@@ -14,7 +14,7 @@ const app = express();
 // Middleware
 const allowedOrigins = [
   "http://localhost:5050",
-  "https://examportal-sooty.vercel.app/"
+  "https://examportal-sooty.vercel.app"
 ];
 app.use(
   cors({
