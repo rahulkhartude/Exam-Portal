@@ -1,6 +1,6 @@
 
 import { useState, useEffect } from "react";
-import { useNavigate,useLocation } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import API from "../../services/api";
 
 import Navbar from "../../components/Navbar";
@@ -11,7 +11,7 @@ import QuestionPalette from "../../components/QuestionPalette";
 function Exam() {
   const EXAMTIME = process.env.REACT_APP_EXAMTIME;
   const navigate = useNavigate();
-  const location = useLocation();
+  // const location = useLocation();
 
   const [questions, setQuestions] = useState([]);
   const [current, setCurrent] = useState(0);
@@ -40,7 +40,7 @@ function Exam() {
     return () => {
       document.removeEventListener("visibilitychange", handleVisibility);
     };
-  }, [navigate, location]);
+  }, [navigate]);
 
  
 
