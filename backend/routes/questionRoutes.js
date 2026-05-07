@@ -8,10 +8,13 @@ const auth = require("../middleware/auth");
 // =======================
 // ✅ CREATE QUESTION
 // =======================
-router.post("/", auth,async (req, res) => {
+router.post("/questions", auth,async (req, res) => {
+
+  console.log("add question called---")
+
   try {
     const { question, options, answer } = req.body;
-
+    
     // Validation
     if (!question || !options || !answer) {
       return res.status(400).json({ message: "All fields are required" });
@@ -41,18 +44,17 @@ router.post("/", auth,async (req, res) => {
     console.error(err);
     res.status(500).json({ message: "Error creating question" });
   }
+
 });
 
 
 // =======================
 // ✅ GET ALL QUESTIONS
 // =======================
-router.get("/",auth, async (req, res) => {
+router.get("/", async (req, res) => {
 
-  console.log("GET /api/admin - User:"); // Debugging line to check req.user
   try {
     const questions = await Question.find();
-    console.log("questions", questions);
     res.json(questions);
 
   } catch (err) {
@@ -85,7 +87,9 @@ router.get("/:id",auth, async (req, res) => {
 // =======================
 // ✅ UPDATE QUESTION
 // =======================
-router.put("/:id",auth, async (req, res) => {
+router.put("/questions/:id",auth, async (req, res) => {
+
+  console.log("Update question called---");
   try {
     const { question, options, answer } = req.body;
 
@@ -95,13 +99,14 @@ router.put("/:id",auth, async (req, res) => {
         message: "Answer must match one of the options",
       });
     }
-
+    console.log("question find by id "); // Debugging line to check incoming data
     const updatedQuestion = await Question.findByIdAndUpdate(
       req.params.id,
       req.body,
       { new: true }
     );
-
+   
+    console.log("question find by id end"); // Debugging line to check incoming data
     if (!updatedQuestion) {
       return res.status(404).json({ message: "Question not found" });
     }
@@ -118,7 +123,7 @@ router.put("/:id",auth, async (req, res) => {
 // =======================
 // ❌ DELETE QUESTION
 // =======================
-router.delete("/:id",auth, async (req, res) => {
+router.delete("/questions/:id",auth, async (req, res) => {
   try {
     const deleted = await Question.findByIdAndDelete(req.params.id);
 

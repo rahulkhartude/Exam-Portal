@@ -12,27 +12,28 @@ function AdminDashboard() {
   const navigate = useNavigate();
   const location = useLocation();
 
-  useEffect(() => {
-    const handleVisibility = () => {
-      if (document.visibilityState === "hidden") {
-        const token = localStorage.getItem("token");
+  // 🔥 Tab change logout
+  // useEffect(() => {
+  //   const handleVisibility = () => {
+  //     if (document.visibilityState === "hidden") {
+  //       const token = localStorage.getItem("token");
         
 
-        // logout only if logged in
-        if (token) {
-          localStorage.removeItem("token");
-          localStorage.removeItem("user");
-          navigate("/login");
-        }
-      }
-    };
+  //       // logout only if logged in
+  //       if (token) {
+  //         localStorage.removeItem("token");
+  //         localStorage.removeItem("user");
+  //         navigate("/login");
+  //       }
+  //     }
+  //   };
 
-    document.addEventListener("visibilitychange", handleVisibility);
+  //   document.addEventListener("visibilitychange", handleVisibility);
 
-    return () => {
-      document.removeEventListener("visibilitychange", handleVisibility);
-    };
-  }, [navigate, location]);
+  //   return () => {
+  //     document.removeEventListener("visibilitychange", handleVisibility);
+  //   };
+  // }, [navigate, location]);
 
   // 🔥 REF for focus
   const questionRef = useRef(null);
@@ -46,9 +47,11 @@ function AdminDashboard() {
   const fetchQuestions = async () => {
     try {
       const res = await API.get("/admin");
+      console.log("All questions",res.data);
       setQuestions(shuffleArray(res.data));
     } catch (err) {
-      console.error(err);
+      
+      console.log("--Error fetching questions:--", err);
     }
   };
 
@@ -76,15 +79,16 @@ const handleBack = () => {
 
   // ================= SUBMIT =================
   const handleSubmit = async () => {
+
     try {
       const data = { question, options, answer };
 
       if (editId) {
-        await API.put(`/questions/${editId}`, data);
+        await API.put(`/admin/questions/${editId}`, data);
         setEditId(null);
       } else {
-        await API.post("/questions", data);
-      }
+        await API.post("/admin/questions", data);
+       }
 
       // reset form
       setQuestion("");
@@ -98,7 +102,6 @@ const handleBack = () => {
 
       fetchQuestions();
     } catch (err) {
-      console.error(err);
       alert("Error while saving question");
     }
   };
@@ -121,7 +124,7 @@ const handleBack = () => {
     if (!window.confirm("Delete this question?")) return;
 
     try {
-      await API.delete(`/questions/${id}`);
+      await API.delete(`/admin/questions/${id}`);
       fetchQuestions();
     } catch (err) {
       console.error(err);
