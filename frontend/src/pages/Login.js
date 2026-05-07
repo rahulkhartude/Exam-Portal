@@ -59,7 +59,7 @@ function Login() {
         <div className="flex items-center justify-center h-screen bg-gray-100">
             <div className="bg-white p-8 rounded shadow w-80">
                 <h2 className="text-2xl font-bold mb-6 text-center">
-                    Live Exam Portal
+                    Exam Portal
                 </h2>
 
                 <input
