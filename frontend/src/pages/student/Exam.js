@@ -42,21 +42,17 @@ function Exam() {
   //   };
   // }, [navigate, location]);
 
-  useEffect(() => {
+ useEffect(() => {
   const logoutUser = () => {
-    const token = localStorage.getItem("token");
+    console.log("Logout Triggered");
 
-    if (token) {
-      console.log("Logout Triggered");
+    localStorage.removeItem("token");
+    localStorage.removeItem("user");
 
-      localStorage.removeItem("token");
-      localStorage.removeItem("user");
-
-      window.location.replace("/login");
-    }
+    window.location.href = "/login";
   };
 
-  const handleVisibility = () => {
+  const handleVisibilityChange = () => {
     console.log(document.visibilityState);
 
     if (document.visibilityState === "hidden") {
@@ -64,16 +60,16 @@ function Exam() {
     }
   };
 
-  const handleBlur = () => {
-    logoutUser();
-  };
-
-  document.addEventListener("visibilitychange", handleVisibility);
-  window.addEventListener("blur", handleBlur);
+  document.addEventListener(
+    "visibilitychange",
+    handleVisibilityChange
+  );
 
   return () => {
-    document.removeEventListener("visibilitychange", handleVisibility);
-    window.removeEventListener("blur", handleBlur);
+    document.removeEventListener(
+      "visibilitychange",
+      handleVisibilityChange
+    );
   };
 }, []);
 
