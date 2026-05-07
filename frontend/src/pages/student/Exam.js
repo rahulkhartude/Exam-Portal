@@ -293,53 +293,111 @@ function Exam() {
   // TAB SWITCH DETECTION
   // =========================
 
-  useEffect(() => {
+  // useEffect(() => {
 
-    const handleVisibilityChange = () => {
+  //   const handleVisibilityChange = () => {
 
-      console.log(
-        "Visibility:",
-        document.visibilityState
-      );
+  //     console.log(
+  //       "Visibility:",
+  //       document.visibilityState
+  //     );
 
-      if (document.hidden) {
+  //     if (document.hidden) {
 
-        setViolations((prev) => {
+  //       setViolations((prev) => {
 
-          const updated = prev + 1;
+  //         const updated = prev + 1;
 
-          alert(
-            `Warning: Tab switching detected (${updated}/3)`
-          );
+  //         alert(
+  //           `Warning: Tab switching detected (${updated}/3)`
+  //         );
 
-          if (updated >= 3) {
+  //         if (updated >= 3) {
 
-            alert(
-              "Exam terminated due to multiple tab switches."
-            );
+  //           alert(
+  //             "Exam terminated due to multiple tab switches."
+  //           );
 
-            logoutUser();
-          }
+  //           logoutUser();
+  //         }
 
-          return updated;
-        });
-      }
-    };
+  //         return updated;
+  //       });
+  //     }
+  //   };
 
-    document.addEventListener(
-      "visibilitychange",
-      handleVisibilityChange
+  //   document.addEventListener(
+  //     "visibilitychange",
+  //     handleVisibilityChange
+  //   );
+
+  //   return () => {
+
+  //     document.removeEventListener(
+  //       "visibilitychange",
+  //       handleVisibilityChange
+  //     );
+  //   };
+
+  // }, [logoutUser]);
+
+useEffect(() => {
+
+  const handleViolation = () => {
+
+    console.log("TAB SWITCH DETECTED");
+
+    localStorage.removeItem("token");
+    localStorage.removeItem("user");
+
+    alert("Tab change detected");
+
+    navigate("/login", {
+      replace: true,
+    });
+  };
+
+  const handleBlur = () => {
+
+    console.log("WINDOW BLUR");
+
+    handleViolation();
+  };
+
+  const handleVisibility = () => {
+
+    console.log(document.visibilityState);
+
+    if (document.hidden) {
+
+      handleViolation();
+    }
+  };
+
+  window.addEventListener(
+    "blur",
+    handleBlur
+  );
+
+  document.addEventListener(
+    "visibilitychange",
+    handleVisibility
+  );
+
+  return () => {
+
+    window.removeEventListener(
+      "blur",
+      handleBlur
     );
 
-    return () => {
+    document.removeEventListener(
+      "visibilitychange",
+      handleVisibility
+    );
+  };
 
-      document.removeEventListener(
-        "visibilitychange",
-        handleVisibilityChange
-      );
-    };
-
-  }, [logoutUser]);
+}, [navigate]);
 
   // =========================
   // FETCH QUESTIONS
