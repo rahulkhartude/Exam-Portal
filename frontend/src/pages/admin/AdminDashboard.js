@@ -1,5 +1,7 @@
 
 import React, { useEffect, useState, useRef } from "react";
+import AddQuestion from "../../components/addQuestion";
+import Pagination from "../../components/pagination";
 import { useNavigate, useLocation } from "react-router-dom";
 import API from "../../services/api";
 
@@ -11,6 +13,13 @@ function AdminDashboard() {
   const [editId, setEditId] = useState(null);
   const navigate = useNavigate();
   const location = useLocation();
+  const [showAddQuestion, setShowAddQuestion] = useState(false);
+  const [currentPage, setCurrentPage] = useState(1);
+  const questionsPerPage = 10;
+
+  const handleAddQuestion = () => {
+    setShowAddQuestion(!showAddQuestion);
+  }
 
   // 🔥 Tab change logout
   // useEffect(() => {
@@ -47,7 +56,6 @@ function AdminDashboard() {
   const fetchQuestions = async () => {
     try {
       const res = await API.get("/admin");
-      console.log("All questions",res.data);
       setQuestions(shuffleArray(res.data));
     } catch (err) {
       
@@ -61,6 +69,16 @@ function AdminDashboard() {
     // 🔥 Auto focus on load
     questionRef.current?.focus();
   }, []);
+
+  // ================= PAGINATION =================
+  const totalPages = Math.ceil(questions.length / questionsPerPage);
+  const startIndex = (currentPage - 1) * questionsPerPage;
+  const endIndex = startIndex + questionsPerPage;
+  const currentQuestions = questions.slice(startIndex, endIndex);
+
+  const handlePageChange = (page) => {
+    setCurrentPage(page);
+  };
 
   // ================= OPTIONS =================
   const handleOptionChange = (value, index) => {
@@ -132,13 +150,16 @@ const handleBack = () => {
   };
 
   return (
+    <>
     <div className="p-10 bg-gray-100 min-h-screen">
+      
       <h1 className="text-3xl font-bold mb-6 text-center">
         🧑‍💻 Admin Dashboard
       </h1>
 
+
       {/* ================= FORM ================= */}
-      <div className="bg-white p-6 rounded shadow max-w-lg mx-auto mb-8">
+      {/* <div className="bg-white p-6 rounded shadow max-w-lg mx-auto mb-8">
         <h2 className="text-xl font-semibold mb-4">
           {editId ? "✏️ Edit Question" : "➕ Add Question"}
         </h2>
@@ -165,7 +186,6 @@ const handleBack = () => {
           />
         ))}
 
-        {/* Select Answer */}
         <select
           className="border p-2 w-full mb-4 rounded"
           value={answer}
@@ -195,15 +215,37 @@ const handleBack = () => {
         </button> 
 }
 
-      </div>
+      </div> */}
+<button className="text-white font-bold mb-4 bg-blue-500 px-4 py-2 rounded hover:bg-blue-900"
+    onClick={handleAddQuestion}>{showAddQuestion ? "Cancel Question" : "Add Question"}
+ </button>
+
+    <div>
+      { showAddQuestion &&
+      <AddQuestion
+   question={question}
+   setQuestion={setQuestion}
+   options={options}
+   setOptions={setOptions}
+   answer={answer}
+   setAnswer={setAnswer}
+   editId={editId}
+   questionRef={questionRef}
+   handleOptionChange={handleOptionChange}
+   handleSubmit={handleSubmit}
+   handleBack={handleBack}
+/> 
+
+}
+    </div>
 
       {/* ================= LIST ================= */}
       <div className="max-w-3xl mx-auto">
         <h2 className="text-xl font-semibold mb-4">
-          📋 All Questions 
+          📋 All Questions ({questions.length})
         </h2>
 
-        {questions.map((q) => (
+        {currentQuestions.map((q) => (
           <div
             key={q._id}
             className="bg-white p-5 rounded shadow mb-4"
@@ -248,7 +290,17 @@ const handleBack = () => {
         ))}
       </div>
     </div>
+
+    
+    <Pagination 
+      questions={questions} 
+      currentPage={currentPage}
+      totalPages={totalPages}
+      onPageChange={handlePageChange}
+    />
+    </>
   );
+  
 }
 
 export default AdminDashboard;
