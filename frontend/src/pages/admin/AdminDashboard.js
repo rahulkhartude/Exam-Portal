@@ -22,27 +22,27 @@ function AdminDashboard() {
   }
 
   // 🔥 Tab change logout
-  // useEffect(() => {
-  //   const handleVisibility = () => {
-  //     if (document.visibilityState === "hidden") {
-  //       const token = localStorage.getItem("token");
+  useEffect(() => {
+    const handleVisibility = () => {
+      if (document.visibilityState === "hidden") {
+        const token = localStorage.getItem("token");
         
 
-  //       // logout only if logged in
-  //       if (token) {
-  //         localStorage.removeItem("token");
-  //         localStorage.removeItem("user");
-  //         navigate("/login");
-  //       }
-  //     }
-  //   };
+        // logout only if logged in
+        if (token) {
+          localStorage.removeItem("token");
+          localStorage.removeItem("user");
+          navigate("/login");
+        }
+      }
+    };
 
-  //   document.addEventListener("visibilitychange", handleVisibility);
+    document.addEventListener("visibilitychange", handleVisibility);
 
-  //   return () => {
-  //     document.removeEventListener("visibilitychange", handleVisibility);
-  //   };
-  // }, [navigate, location]);
+    return () => {
+      document.removeEventListener("visibilitychange", handleVisibility);
+    };
+  }, [navigate, location]);
 
   // 🔥 REF for focus
   const questionRef = useRef(null);
