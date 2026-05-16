@@ -2,22 +2,22 @@ trigger:
 - main
 
 pool:
-  vmImage: ubuntu-latest
+  vmImage: 'ubuntu-latest'
 
 steps:
 
 - task: NodeTool@0
   inputs:
     versionSpec: '18.x'
-  displayName: Install Node.js
+  displayName: 'Install Node.js'
 
 - script: |
     cd frontend
     npm install
     npm run build
-  displayName: Build Frontend
+  displayName: 'Build Frontend'
 
 - script: |
     cd backend
     npm install
-  displayName: Install Backend Dependencies
+  displayName: 'Install Backend Dependencies'
