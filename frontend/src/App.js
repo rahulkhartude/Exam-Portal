@@ -6,6 +6,7 @@ import StudentDashboard from "./pages/student/StudentDashboard"
 import Exam from "./pages/student/Exam"
 import Result from "./pages/student/Result"
 import AdminDashboard from "./pages/admin/AdminDashboard"
+import AdminResults from "./pages/admin/AdminResults"
 import ProtectedRoute from "./components/ProtectedRoute";
 
 
@@ -28,6 +29,14 @@ function App() {
                     element={
                         <ProtectedRoute role="admin">
                             <AdminDashboard />
+                        </ProtectedRoute>
+                    }
+                />
+                <Route
+                    path="/admin/results"
+                    element={
+                        <ProtectedRoute role="admin">
+                            <AdminResults />
                         </ProtectedRoute>
                     }
                 />

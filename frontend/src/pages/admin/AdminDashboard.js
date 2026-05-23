@@ -1,8 +1,8 @@
 
-import React, { useEffect, useState, useRef } from "react";
+import React, { useCallback, useEffect, useState, useRef } from "react";
 import AddQuestion from "../../components/addQuestion";
 import Pagination from "../../components/pagination";
-import { useNavigate, useLocation } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import API from "../../services/api";
 
 function AdminDashboard() {
@@ -12,18 +12,40 @@ function AdminDashboard() {
   const [answer, setAnswer] = useState("");
   const [editId, setEditId] = useState(null);
   const navigate = useNavigate();
-  const location = useLocation();
   const [showAddQuestion, setShowAddQuestion] = useState(false);
-  const [lastAddedId, setLastAddedId] = useState(null);
   const [highlightId, setHighlightId] = useState(null);
   const [currentPage, setCurrentPage] = useState(1);
   const questionsPerPage = 10;
+  
+  // 🆕 New features
+  const [searchQuery, setSearchQuery] = useState("");
+  const [difficulty, setDifficulty] = useState("medium");
+  const [tags, setTags] = useState("");
+  const [favorites, setFavorites] = useState(() => {
+    const raw = localStorage.getItem("favoriteQuestions");
+    if (!raw) return new Set();
+    try {
+      const parsed = JSON.parse(raw);
+      return Array.isArray(parsed) ? new Set(parsed) : new Set();
+    } catch {
+      return new Set();
+    }
+  });
+  const [selectedQuestions, setSelectedQuestions] = useState(new Set());
+  // Settings
+  const [cooldownHours, setCooldownHours] = useState(24);
+  const [settingsLoading, setSettingsLoading] = useState(false);
+  const [users, setUsers] = useState([]);
+  const [usersLoading, setUsersLoading] = useState(false);
+  const [userError, setUserError] = useState("");
 
   const handleAddQuestion = () => {
     if (!showAddQuestion) {
       setQuestion("");
       setOptions(["", "", "", ""]);
       setAnswer("");
+      setDifficulty("medium");
+      setTags("");
       setEditId(null);
     }
     setShowAddQuestion((prev) => !prev);
@@ -61,7 +83,7 @@ function AdminDashboard() {
   };
 
   // ================= FETCH =================
-  const fetchQuestions = async () => {
+  const fetchQuestions = useCallback(async () => {
     try {
       const res = await API.get("/admin/allforAdmin");
       const arr = shuffleArray(res.data);
@@ -70,20 +92,55 @@ function AdminDashboard() {
     } catch (err) {
       return [];
     }
-  };
+  }, []);
 
   useEffect(() => {
     fetchQuestions();
 
+    const loadSettings = async () => {
+      try {
+        setSettingsLoading(true);
+        const res = await API.get('/admin/settings');
+        if (res?.data) {
+          setCooldownHours(Number(res.data.exam_cooldown_hours) || 24);
+        }
+      } catch (e) {
+        // ignore
+      } finally {
+        setSettingsLoading(false);
+      }
+    };
+
+    const loadUsers = async () => {
+      try {
+        setUsersLoading(true);
+        const res = await API.get('/admin/users');
+        setUsers(res.data || []);
+      } catch (e) {
+        console.error('Error loading admin users:', e);
+        setUserError(e?.response?.data?.message || e?.message || 'Unable to load users.');
+      } finally {
+        setUsersLoading(false);
+      }
+    };
+
+    loadSettings();
+    loadUsers();
+
     // 🔥 Auto focus on load
     questionRef.current?.focus();
-  }, []);
+  }, [fetchQuestions]);
+
+  // ================= SEARCH/FILTER =================
+  const filteredQuestions = questions.filter((q) =>
+    q.question.toLowerCase().includes(searchQuery.toLowerCase())
+  );
 
   // ================= PAGINATION =================
-  const totalPages = Math.ceil(questions.length / questionsPerPage);
+  const totalPages = Math.ceil(filteredQuestions.length / questionsPerPage);
   const startIndex = (currentPage - 1) * questionsPerPage;
   const endIndex = startIndex + questionsPerPage;
-  const currentQuestions = questions.slice(startIndex, endIndex);
+  const currentQuestions = filteredQuestions.slice(startIndex, endIndex);
 
   const handlePageChange = (page) => {
     setCurrentPage(page);
@@ -106,6 +163,8 @@ const handleBack = () => {
   setQuestion("");
   setOptions(["", "", "", ""]);
   setAnswer("");
+  setDifficulty("medium");
+  setTags("");
   setEditId(null);
   setShowAddQuestion(false); // 🔥 Hide the form when going back
 };
@@ -125,7 +184,14 @@ const handleLogout = () => {
     }
 
     try {
-      const data = { question, options, answer };
+      const tagArray = tags.split(",").map((t) => t.trim()).filter((t) => t);
+      const data = { 
+        question, 
+        options, 
+        answer,
+        difficulty,
+        tags: tagArray
+      };
       const isEdit = Boolean(editId);
 
       let focusId = null;
@@ -133,18 +199,18 @@ const handleLogout = () => {
         await API.put(`/admin/questions/${editId}`, data);
         // focus the updated question after refresh
         focusId = editId;
-        setLastAddedId(editId);
         setEditId(null);
       } else {
         const res = await API.post("/admin/questions", data);
         focusId = res.data?._id || null;
-        setLastAddedId(focusId);
       }
 
       // reset form fields for next action (keep form visible)
       setQuestion("");
       setOptions(["", "", "", ""]);
       setAnswer("");
+      setDifficulty("medium");
+      setTags("");
       setShowAddQuestion(true);
 
       // reload questions then focus the newly added/updated item
@@ -170,7 +236,6 @@ const handleLogout = () => {
           }
           setHighlightId(focusId);
           setTimeout(() => setHighlightId(null), 3000);
-          setLastAddedId(null);
         }
         // also ensure the input is focused for quick add
         questionRef.current?.focus();
@@ -185,6 +250,8 @@ const handleLogout = () => {
     setQuestion(q.question);
     setOptions(q.options);
     setAnswer(q.answer);
+    setDifficulty(q.difficulty || "medium");
+    setTags(q.tags ? q.tags.join(", ") : "");
     setEditId(q._id);
     setShowAddQuestion(true); // 🔥 Show the form when editing
 
@@ -206,20 +273,174 @@ const handleLogout = () => {
     }
   };
 
+  const handleToggleBypass = async (userId, currentValue) => {
+    try {
+      const res = await API.put(`/admin/users/${userId}/retake-bypass`, {
+        retakeBypass: !currentValue,
+      });
+      setUsers((prev) => prev.map((user) => (user._id === userId ? { ...user, retakeBypass: res.data.retakeBypass } : user)));
+    } catch (err) {
+      alert(err?.response?.data?.message || err?.message || "Unable to update bypass setting.");
+    }
+  };
+
+  // ================= FAVORITES =================
+  const toggleFavorite = (id) => {
+    const newFavorites = new Set(favorites);
+    if (newFavorites.has(id)) {
+      newFavorites.delete(id);
+    } else {
+      newFavorites.add(id);
+    }
+    setFavorites(newFavorites);
+    localStorage.setItem("favoriteQuestions", JSON.stringify([...newFavorites]));
+  };
+
+  // ================= BULK ACTIONS =================
+  const toggleSelectQuestion = (id) => {
+    const newSelected = new Set(selectedQuestions);
+    if (newSelected.has(id)) {
+      newSelected.delete(id);
+    } else {
+      newSelected.add(id);
+    }
+    setSelectedQuestions(newSelected);
+  };
+
+  const toggleSelectAll = () => {
+    if (selectedQuestions.size === currentQuestions.length) {
+      setSelectedQuestions(new Set());
+    } else {
+      setSelectedQuestions(new Set(currentQuestions.map((q) => q._id)));
+    }
+  };
+
+  const bulkDelete = async () => {
+    if (selectedQuestions.size === 0) {
+      alert("Select questions to delete");
+      return;
+    }
+    if (!window.confirm(`Delete ${selectedQuestions.size} questions?`)) return;
+
+    try {
+      for (const id of selectedQuestions) {
+        await API.delete(`/admin/questions/${id}`);
+      }
+      setSelectedQuestions(new Set());
+      fetchQuestions();
+    } catch (err) {
+      alert("Error deleting questions");
+    }
+  };
+
+
   return (
     <>
     <div className="p-5 sm:p-10 bg-gray-100 min-h-screen px-4">
       
       <div className="flex flex-col sm:flex-row items-center justify-between gap-4 mb-6">
-        <h1 className="text-3xl font-bold text-center sm:text-left">
-          🧑‍💻 Admin Dashboard
-        </h1>
-        <button
-          onClick={handleLogout}
-          className="bg-red-600 text-white px-4 py-2 rounded hover:bg-red-700"
-        >
-          Logout
-        </button>
+        <div>
+          <h1 className="text-3xl font-bold text-center sm:text-left">
+            🧑‍💻 Admin Dashboard
+          </h1>
+          <p className="text-gray-600">Manage questions and review student results.</p>
+        </div>
+        <div className="flex flex-wrap gap-3">
+            <div className="flex items-center gap-3 bg-white p-3 rounded shadow">
+              <label className="text-sm text-gray-600">Exam Cooldown (hours)</label>
+              <input type="number" min="0" value={cooldownHours} onChange={(e) => setCooldownHours(e.target.value)} className="border p-2 rounded w-24" />
+              <button onClick={async () => {
+                try {
+                  setSettingsLoading(true);
+                  await API.put('/admin/settings', { exam_cooldown_hours: Number(cooldownHours) });
+                  alert('Settings saved');
+                } catch (err) {
+                  alert(err?.response?.data?.message || 'Error saving settings');
+                } finally { setSettingsLoading(false); }
+              }} className="bg-green-600 text-white px-3 py-1 rounded">Save</button>
+            </div>
+          <button
+            onClick={() => navigate("/admin/results")}
+            className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
+          >
+            View Results
+          </button>
+          <button
+            onClick={handleLogout}
+            className="bg-red-600 text-white px-4 py-2 rounded hover:bg-red-700"
+          >
+            Logout
+          </button>
+        </div>
+      </div>
+
+      <div className="bg-white rounded shadow p-6 mb-6">
+        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-4">
+          <div>
+            <h2 className="text-xl font-semibold">Retake Bypass Management</h2>
+            <p className="text-sm text-gray-600">Grant explicit cooldown bypass to individual users.</p>
+          </div>
+          {usersLoading && <span className="text-sm text-gray-500">Loading users...</span>}
+        </div>
+
+        {userError ? (
+          <div className="text-sm text-red-600">{userError}</div>
+        ) : (
+          <div className="grid gap-3">
+            {users.map((user) => (
+              <div key={user._id} className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 p-3 rounded border border-gray-200">
+                <div>
+                  <div className="font-semibold">{user.name}</div>
+                  <div className="text-sm text-gray-500">{user.email}</div>
+                  <div className="text-sm text-gray-500">Role: {user.role}</div>
+                </div>
+                <button
+                  onClick={() => handleToggleBypass(user._id, user.retakeBypass)}
+                  className={`px-4 py-2 rounded text-white ${user.retakeBypass ? "bg-green-600 hover:bg-green-700" : "bg-gray-600 hover:bg-gray-700"}`}
+                >
+                  {user.retakeBypass ? "Bypass Enabled" : "Enable Bypass"}
+                </button>
+              </div>
+            ))}
+            {users.length === 0 && !usersLoading && (
+              <div className="text-sm text-gray-500">No users found.</div>
+            )}
+          </div>
+        )}
+      </div>
+
+      {/* ================= STATISTICS ================= */}
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+        <div className="bg-white p-4 rounded shadow text-center">
+          <h3 className="text-2xl font-bold text-blue-600">{questions.length}</h3>
+          <p className="text-gray-600">Total Questions</p>
+        </div>
+        <div className="bg-white p-4 rounded shadow text-center">
+          <h3 className="text-2xl font-bold text-green-600">{filteredQuestions.length}</h3>
+          <p className="text-gray-600">Searched Results</p>
+        </div>
+        <div className="bg-white p-4 rounded shadow text-center">
+          <h3 className="text-2xl font-bold text-yellow-600">{favorites.size}</h3>
+          <p className="text-gray-600">Favorite</p>
+        </div>
+        <div className="bg-white p-4 rounded shadow text-center">
+          <h3 className="text-2xl font-bold text-red-600">{selectedQuestions.size}</h3>
+          <p className="text-gray-600">Selected</p>
+        </div>
+      </div>
+
+      {/* ================= SEARCH BAR ================= */}
+      <div className="mb-6">
+        <input
+          type="text"
+          placeholder="🔍 Search questions..."
+          className="w-full p-3 border rounded shadow"
+          value={searchQuery}
+          onChange={(e) => {
+            setSearchQuery(e.target.value);
+            setCurrentPage(1);
+          }}
+        />
       </div>
 
       {/* ================= FORM ================= */}
@@ -289,6 +510,19 @@ const handleLogout = () => {
   </button>
 )}
 
+{/* ================= BULK ACTIONS ================= */}
+{selectedQuestions.size > 0 && (
+  <div className="mb-4 p-4 bg-red-50 border border-red-200 rounded flex flex-col sm:flex-row justify-between items-center gap-3">
+    <span className="text-red-600 font-semibold">{selectedQuestions.size} questions selected</span>
+    <button
+      onClick={bulkDelete}
+      className="bg-red-600 text-white px-4 py-2 rounded hover:bg-red-700"
+    >
+      🗑️ Delete Selected
+    </button>
+  </div>
+)}
+
     <div>
       {(showAddQuestion || editId) && (
         <AddQuestion
@@ -298,6 +532,10 @@ const handleLogout = () => {
           setOptions={setOptions}
           answer={answer}
           setAnswer={setAnswer}
+          difficulty={difficulty}
+          setDifficulty={setDifficulty}
+          tags={tags}
+          setTags={setTags}
           editId={editId}
           questionRef={questionRef}
           handleOptionChange={handleOptionChange}
@@ -307,10 +545,23 @@ const handleLogout = () => {
       )}
     </div>
 
+      {/* ================= SELECT ALL ================= */}
+      {currentQuestions.length > 0 && (
+        <div className="mb-4 p-4 bg-gray-50 rounded flex items-center gap-3">
+          <input
+            type="checkbox"
+            checked={selectedQuestions.size === currentQuestions.length && currentQuestions.length > 0}
+            onChange={toggleSelectAll}
+            className="w-5 h-5"
+          />
+          <span className="text-gray-600">Select All ({currentQuestions.length})</span>
+        </div>
+      )}
+
       {/* ================= LIST ================= */}
-      <div className="max-w-3xl mx-auto">
+      <div className="max-w-4xl mx-auto">
         <h2 className="text-xl font-semibold mb-4">
-          📋 All Questions ({questions.length})
+          📋 Questions ({filteredQuestions.length}/{questions.length})
         </h2>
 
         {currentQuestions.map((q) => (
@@ -320,42 +571,72 @@ const handleLogout = () => {
             tabIndex={-1}
             className={`p-5 rounded shadow mb-4 ${q._id === highlightId ? "bg-yellow-100 border border-yellow-500" : "bg-white"}`}
           >
-            <div className="flex justify-between">
-              <h3 className="font-semibold text-lg">
-                {q.question}
-              </h3>
-
-              <div>
-                <button
-                  onClick={() => handleEdit(q)}
-                  className="bg-yellow-400 px-3 py-1 rounded mr-2"
-                >
-                  Edit
-                </button>
-
-                <button
-                  onClick={() => handleDelete(q._id)}
-                  className="bg-red-500 text-white px-3 py-1 rounded"
-                >
-                  Delete
-                </button>
+            <div className="flex flex-col gap-4">
+              {/* Header with checkbox, title, and actions */}
+              <div className="flex items-start gap-3">
+                <input
+                  type="checkbox"
+                  checked={selectedQuestions.has(q._id)}
+                  onChange={() => toggleSelectQuestion(q._id)}
+                  className="w-5 h-5 mt-1"
+                />
+                <div className="flex-1">
+                  <h3 className="font-semibold text-lg">{q.question}</h3>
+                </div>
+                <div className="flex gap-2">
+                  <button
+                    onClick={() => toggleFavorite(q._id)}
+                    className={`px-3 py-1 rounded ${favorites.has(q._id) ? "bg-yellow-300 text-yellow-700" : "bg-gray-200"}`}
+                  >
+                    ⭐
+                  </button>
+                  <button
+                    onClick={() => handleEdit(q)}
+                    className="bg-yellow-400 px-3 py-1 rounded"
+                  >
+                    Edit
+                  </button>
+                  <button
+                    onClick={() => handleDelete(q._id)}
+                    className="bg-red-500 text-white px-3 py-1 rounded"
+                  >
+                    Delete
+                  </button>
+                </div>
               </div>
-            </div>
 
-            <ul className="mt-3">
-              {shuffleArray(q.options).map((opt, i) => (
-                <li
-                  key={i}
-                  className={`p-2 rounded mb-1 ${
-                          opt === q.answer && q.answer !== ""
-                            ? "bg-green-100 text-green-700 font-semibold"
-                            : "bg-gray-100"
-                        }`}
-                      >
-                        {opt} {opt === q.answer && q.answer !== "" && "✅"}
-                </li>
-              ))}
-            </ul>
+              {/* Difficulty and Tags */}
+              <div className="flex flex-wrap gap-2">
+                <span className={`px-2 py-1 rounded text-xs font-semibold ${
+                  q.difficulty === "easy" ? "bg-green-100 text-green-700" :
+                  q.difficulty === "medium" ? "bg-yellow-100 text-yellow-700" :
+                  "bg-red-100 text-red-700"
+                }`}>
+                  {(q.difficulty || "medium").toUpperCase()}
+                </span>
+                {q.tags && q.tags.length > 0 && q.tags.map((tag, i) => (
+                  <span key={i} className="px-2 py-1 rounded text-xs bg-blue-100 text-blue-700">
+                    {tag}
+                  </span>
+                ))}
+              </div>
+
+              {/* Options */}
+              <ul className="mt-2">
+                {shuffleArray(q.options).map((opt, i) => (
+                  <li
+                    key={i}
+                    className={`p-2 rounded mb-1 ${
+                            opt === q.answer && q.answer !== ""
+                              ? "bg-green-100 text-green-700 font-semibold"
+                              : "bg-gray-100"
+                          }`}
+                        >
+                          {opt} {opt === q.answer && q.answer !== "" && "✅"}
+                  </li>
+                ))}
+              </ul>
+            </div>
           </div>
         ))}
       </div>

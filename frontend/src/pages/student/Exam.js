@@ -17,6 +17,8 @@ function Exam() {
   const [current, setCurrent] = useState(0);
   const [answers, setAnswers] = useState({});
   const [loading, setLoading] = useState(false);
+  const [attempted, setAttempted] = useState(false);
+  const [attemptInfo, setAttemptInfo] = useState(null);
 
   // 🔥 Tab change logout
   useEffect(() => {
@@ -45,19 +47,63 @@ function Exam() {
 
 
   useEffect(() => {
-  API.get("/admin", {
-    headers: {
-      Authorization: `Bearer ${localStorage.getItem("token")}`,
-    },
-  })
-    .then((res) => setQuestions(res.data))
-    .catch((err) => {});
-}, []);
+    API.get("/result/me")
+      .then((res) => {
+        // New response shape: { latest, canRetake, nextAvailableAt }
+        const data = res.data;
+        if (!data) return;
+
+        if (data.latest && !data.canRetake) {
+          setAttempted(true);
+          setAttemptInfo(data.latest);
+          localStorage.setItem("examAttempted", "true");
+        } else {
+          // either no latest attempt, or can retake -> allow exam
+          setAttempted(false);
+          setAttemptInfo(data.latest || null);
+        }
+      })
+      .catch(() => {
+        if (localStorage.getItem("examAttempted") === "true") {
+          setAttempted(true);
+        }
+      });
+
+    API.get("/admin", {
+      headers: {
+        Authorization: `Bearer ${localStorage.getItem("token")}`,
+      },
+    })
+      .then((res) => setQuestions(res.data))
+      .catch((err) => {});
+  }, []);
    
   const user = JSON.parse(localStorage.getItem("user"));
   if (!user) {
     navigate("/login");
     return;
+  }
+
+  if (attempted) {
+    return (
+      <div className="min-h-screen bg-gray-100 flex items-center justify-center px-4">
+        <div className="bg-white p-8 rounded shadow w-full max-w-lg text-center">
+          <h2 className="text-2xl font-bold mb-4">Exam Already Attempted</h2>
+          <p className="text-gray-700 mb-4">
+            Our records show that you have already completed the exam.
+          </p>
+          {attemptInfo?.score != null && (
+            <p className="text-lg font-semibold mb-4">Score: {attemptInfo.score}</p>
+          )}
+          <button
+            onClick={() => navigate("/result")}
+            className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
+          >
+            View Result
+          </button>
+        </div>
+      </div>
+    );
   }
 
   const handleAnswer = (option) => {
@@ -94,16 +140,13 @@ function Exam() {
         {
           answers: formattedAnswers,
           user: JSON.parse(localStorage.getItem("user")),
-        },
-        {
-          headers: {
-            Authorization: `Bearer ${localStorage.getItem("token")}`,
-          },
         }
       );
       alert("Exam Submitted Successfully");
 
       localStorage.setItem("score", res.data.score);
+      localStorage.setItem("examAttempted", "true");
+      localStorage.setItem("resultData", JSON.stringify(res.data));
 
       navigate("/result");
     } catch (err) {

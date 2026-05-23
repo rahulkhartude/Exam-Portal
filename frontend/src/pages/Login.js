@@ -33,6 +33,7 @@ function Login() {
             // ✅ Save data
             localStorage.setItem("token", token);
             localStorage.setItem("user", JSON.stringify(user));
+            localStorage.removeItem("examAttempted");
 
             // ✅ Role-based navigation
             if (user.role === "admin") {

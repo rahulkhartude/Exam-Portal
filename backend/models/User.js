@@ -27,6 +27,11 @@ const userSchema = new mongoose.Schema({
     minlength: [6, "Password must be at least 6 characters"]
   },
 
+  retakeBypass: {
+    type: Boolean,
+    default: false,
+  },
+
   role: {
     type: String,
     enum: ["student", "admin"], // only these values allowed
