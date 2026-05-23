@@ -23,12 +23,11 @@ router.post("/register", async (req, res) => {
 });
 
 router.post("/login", async (req, res) => {
-  console.log("Login request received with body:", req.body); // Debugging log
+
   const { email, password } = req.body;
   const user = await User.findOne({ email });
-  console.log("Login attempt for email:", email); // Debugging log
- 
-  if (!user) return res.status(400).json({ message: "User not found" });
+
+ if (!user) return res.status(400).json({ message: "User not found" });
 
   // 🔐 If using bcrypt (recommended)
   const valid = await bcrypt.compare(password, user.password);

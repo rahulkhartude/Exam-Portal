@@ -7,27 +7,27 @@ function StudentDashboard() {
   const navigate = useNavigate();
   const location = useLocation();
 
-  useEffect(() => {
-    const handleVisibility = () => {
-      if (document.visibilityState === "hidden") {
-        const token = localStorage.getItem("token");
+  // useEffect(() => {
+  //   const handleVisibility = () => {
+  //     if (document.visibilityState === "hidden") {
+  //       const token = localStorage.getItem("token");
         
 
-        // logout only if logged in
-        if (token) {
-          localStorage.removeItem("token");
-          localStorage.removeItem("user");
-          navigate("/login");
-        }
-      }
-    };
+  //       // logout only if logged in
+  //       if (token) {
+  //         localStorage.removeItem("token");
+  //         localStorage.removeItem("user");
+  //         navigate("/login");
+  //       }
+  //     }
+  //   };
 
-    document.addEventListener("visibilitychange", handleVisibility);
+  //   document.addEventListener("visibilitychange", handleVisibility);
 
-    return () => {
-      document.removeEventListener("visibilitychange", handleVisibility);
-    };
-  }, [navigate, location]);
+  //   return () => {
+  //     document.removeEventListener("visibilitychange", handleVisibility);
+  //   };
+  // }, [navigate, location]);
 
 
   // ✅ Get user from localStorage
@@ -46,10 +46,10 @@ function StudentDashboard() {
       
       <Navbar />
 
-      <div className="flex flex-col items-center justify-center mt-10">
+      <div className="flex flex-col items-center justify-center mt-10 px-4">
 
         {/* Card */}
-        <div className="bg-white shadow-lg rounded-2xl p-8 w-96 text-center">
+        <div className="bg-white shadow-lg rounded-2xl p-6 sm:p-8 w-full max-w-md text-center">
 
           <h2 className="text-2xl font-bold mb-2">
             Welcome {user?.name || "Student"}

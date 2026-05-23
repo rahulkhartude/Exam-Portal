@@ -1,9 +1,6 @@
 
 function QuestionCard({ question, selected, handleAnswer }) {
 
-    console.log("QuestionCard rendered with question: ", question);
-        console.log("QuestionCard rendered with question: ", selected);
-
 
     return (
 
@@ -39,6 +36,18 @@ function QuestionCard({ question, selected, handleAnswer }) {
                 ))}
 
             </div>
+
+            {/* Clear answer button: allows student to unselect an answer */}
+            {selected && (
+                <div className="mt-4">
+                    <button
+                        onClick={() => handleAnswer(null)}
+                        className="bg-gray-300 text-gray-800 px-3 py-2 rounded"
+                    >
+                        Clear Answer
+                    </button>
+                </div>
+            )}
 
         </div>
 

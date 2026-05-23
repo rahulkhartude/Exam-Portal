@@ -18,9 +18,9 @@ function Result() {
   }, []);
 
   return (
-    <div className="flex items-center justify-center min-h-screen bg-gray-100">
+    <div className="flex items-center justify-center min-h-screen bg-gray-100 px-4">
       
-      <div className="bg-white p-10 rounded shadow text-center w-96">
+      <div className="bg-white p-8 sm:p-10 rounded shadow text-center w-full max-w-md">
         
         <h1 className="text-3xl font-bold mb-6">
           Exam Completed

@@ -49,22 +49,32 @@ router.post("/questions", auth,async (req, res) => {
 
 
 // =======================
-// ✅ GET ALL QUESTIONS
+// ✅ GET 20 QUESTIONS
 // =======================
 router.get("/", async (req, res) => {
-
   try {
-    const questions = await Question.find();
-    
+    const questions = await Question.aggregate([
+      { $sample: { size: 20 } },
+      { $project: { answer: 0 } }
+    ]);
+
     res.json(questions);
-
-
   } catch (err) {
     console.error(err);
     res.status(500).json({ message: "Error fetching questions" });
   }
 });
 
+router.get("/allforAdmin",async (req, res) => {
+  try {
+    const questions = await Question.find();
+
+    res.json(questions);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: "Error fetching questions" });
+  }
+});
 
 // =======================
 // ✅ GET SINGLE QUESTION
@@ -91,7 +101,6 @@ router.get("/:id",auth, async (req, res) => {
 // =======================
 router.put("/questions/:id",auth, async (req, res) => {
 
-  console.log("Update question called---");
   try {
     const { question, options, answer } = req.body;
 

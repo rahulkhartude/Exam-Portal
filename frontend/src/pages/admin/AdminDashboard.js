@@ -14,35 +14,43 @@ function AdminDashboard() {
   const navigate = useNavigate();
   const location = useLocation();
   const [showAddQuestion, setShowAddQuestion] = useState(false);
+  const [lastAddedId, setLastAddedId] = useState(null);
+  const [highlightId, setHighlightId] = useState(null);
   const [currentPage, setCurrentPage] = useState(1);
   const questionsPerPage = 10;
 
   const handleAddQuestion = () => {
-    setShowAddQuestion(!showAddQuestion);
+    if (!showAddQuestion) {
+      setQuestion("");
+      setOptions(["", "", "", ""]);
+      setAnswer("");
+      setEditId(null);
+    }
+    setShowAddQuestion((prev) => !prev);
   }
 
-  // 🔥 Tab change logout
-  useEffect(() => {
-    const handleVisibility = () => {
-      if (document.visibilityState === "hidden") {
-        const token = localStorage.getItem("token");
+  // // 🔥 Tab change logout
+  // useEffect(() => {
+  //   const handleVisibility = () => {
+  //     if (document.visibilityState === "hidden") {
+  //       const token = localStorage.getItem("token");
         
 
-        // logout only if logged in
-        if (token) {
-          localStorage.removeItem("token");
-          localStorage.removeItem("user");
-          navigate("/login");
-        }
-      }
-    };
+  //       // logout only if logged in
+  //       if (token) {
+  //         localStorage.removeItem("token");
+  //         localStorage.removeItem("user");
+  //         navigate("/login");
+  //       }
+  //     }
+  //   };
 
-    document.addEventListener("visibilitychange", handleVisibility);
+  //   document.addEventListener("visibilitychange", handleVisibility);
 
-    return () => {
-      document.removeEventListener("visibilitychange", handleVisibility);
-    };
-  }, [navigate, location]);
+  //   return () => {
+  //     document.removeEventListener("visibilitychange", handleVisibility);
+  //   };
+  // }, [navigate, location]);
 
   // 🔥 REF for focus
   const questionRef = useRef(null);
@@ -55,11 +63,14 @@ function AdminDashboard() {
   // ================= FETCH =================
   const fetchQuestions = async () => {
     try {
-      const res = await API.get("/admin");
-      setQuestions(shuffleArray(res.data));
+      const res = await API.get("/admin/allforAdmin");
+      console.log("Fetched Questions: ", res.data);
+      const arr = shuffleArray(res.data);
+      setQuestions(arr);
+      return arr;
     } catch (err) {
-      
       console.log("--Error fetching questions:--", err);
+      return [];
     }
   };
 
@@ -83,8 +94,14 @@ function AdminDashboard() {
   // ================= OPTIONS =================
   const handleOptionChange = (value, index) => {
     const newOptions = [...options];
+    const oldValue = newOptions[index];
     newOptions[index] = value;
     setOptions(newOptions);
+
+    // Only keep the answer in sync when a previously selected option is edited.
+    if (oldValue && oldValue === answer) {
+      setAnswer(value);
+    }
   };
 
 const handleBack = () => {
@@ -92,33 +109,74 @@ const handleBack = () => {
   setOptions(["", "", "", ""]);
   setAnswer("");
   setEditId(null);
+  setShowAddQuestion(false); // 🔥 Hide the form when going back
+};
+
+const handleLogout = () => {
+  localStorage.removeItem("token");
+  localStorage.removeItem("user");
+  navigate("/login");
 };
 
 
   // ================= SUBMIT =================
   const handleSubmit = async () => {
+    if (!answer) {
+      alert("Please select the correct answer before submitting.");
+      return;
+    }
 
     try {
       const data = { question, options, answer };
+      const isEdit = Boolean(editId);
 
-      if (editId) {
+      let focusId = null;
+      if (isEdit) {
         await API.put(`/admin/questions/${editId}`, data);
+        // focus the updated question after refresh
+        focusId = editId;
+        setLastAddedId(editId);
         setEditId(null);
       } else {
-        await API.post("/admin/questions", data);
-       }
+        const res = await API.post("/admin/questions", data);
+        focusId = res.data?._id || null;
+        setLastAddedId(focusId);
+      }
 
-      // reset form
+      // reset form fields for next action (keep form visible)
       setQuestion("");
       setOptions(["", "", "", ""]);
       setAnswer("");
+      setShowAddQuestion(true);
 
-      // 🔥 focus again after submit
+      // reload questions then focus the newly added/updated item
+      const all = await fetchQuestions();
+
+      // Move any added or updated question to the top so it is clearly visible.
+      if (focusId && all && all.length) {
+        const found = all.find((q) => q._id === focusId);
+        if (found) {
+          const reordered = [found, ...all.filter((q) => q._id !== focusId)];
+          setQuestions(reordered);
+          // reset pagination to first page so item is visible
+          setCurrentPage(1);
+        }
+      }
+
       setTimeout(() => {
+        if (focusId) {
+          const el = document.getElementById(`q-${focusId}`);
+          if (el) {
+            el.scrollIntoView({ behavior: "smooth", block: "center" });
+            el.focus();
+          }
+          setHighlightId(focusId);
+          setTimeout(() => setHighlightId(null), 3000);
+          setLastAddedId(null);
+        }
+        // also ensure the input is focused for quick add
         questionRef.current?.focus();
-      }, 0);
-
-      fetchQuestions();
+      }, 100);
     } catch (err) {
       alert("Error while saving question");
     }
@@ -126,10 +184,12 @@ const handleBack = () => {
 
   // ================= EDIT =================
   const handleEdit = (q) => {
+    console.log("Editing Question: ", q);
     setQuestion(q.question);
     setOptions(q.options);
     setAnswer(q.answer);
     setEditId(q._id);
+    setShowAddQuestion(true); // 🔥 Show the form when editing
 
     // 🔥 focus on input
     setTimeout(() => {
@@ -151,12 +211,19 @@ const handleBack = () => {
 
   return (
     <>
-    <div className="p-10 bg-gray-100 min-h-screen">
+    <div className="p-5 sm:p-10 bg-gray-100 min-h-screen px-4">
       
-      <h1 className="text-3xl font-bold mb-6 text-center">
-        🧑‍💻 Admin Dashboard
-      </h1>
-
+      <div className="flex flex-col sm:flex-row items-center justify-between gap-4 mb-6">
+        <h1 className="text-3xl font-bold text-center sm:text-left">
+          🧑‍💻 Admin Dashboard
+        </h1>
+        <button
+          onClick={handleLogout}
+          className="bg-red-600 text-white px-4 py-2 rounded hover:bg-red-700"
+        >
+          Logout
+        </button>
+      </div>
 
       {/* ================= FORM ================= */}
       {/* <div className="bg-white p-6 rounded shadow max-w-lg mx-auto mb-8">
@@ -216,27 +283,31 @@ const handleBack = () => {
 }
 
       </div> */}
-<button className="text-white font-bold mb-4 bg-blue-500 px-4 py-2 rounded hover:bg-blue-900"
-    onClick={handleAddQuestion}>{showAddQuestion ? "Cancel Question" : "Add Question"}
- </button>
+{!showAddQuestion && !editId && (
+  <button
+    className="text-white font-bold mb-4 px-4 py-2 rounded bg-blue-500 hover:bg-blue-900 w-full max-w-xs"
+    onClick={handleAddQuestion}
+  >
+    Add Question
+  </button>
+)}
 
     <div>
-      { showAddQuestion &&
-      <AddQuestion
-   question={question}
-   setQuestion={setQuestion}
-   options={options}
-   setOptions={setOptions}
-   answer={answer}
-   setAnswer={setAnswer}
-   editId={editId}
-   questionRef={questionRef}
-   handleOptionChange={handleOptionChange}
-   handleSubmit={handleSubmit}
-   handleBack={handleBack}
-/> 
-
-}
+      {(showAddQuestion || editId) && (
+        <AddQuestion
+          question={question}
+          setQuestion={setQuestion}
+          options={options}
+          setOptions={setOptions}
+          answer={answer}
+          setAnswer={setAnswer}
+          editId={editId}
+          questionRef={questionRef}
+          handleOptionChange={handleOptionChange}
+          handleSubmit={handleSubmit}
+          handleBack={handleBack}
+        />
+      )}
     </div>
 
       {/* ================= LIST ================= */}
@@ -248,7 +319,9 @@ const handleBack = () => {
         {currentQuestions.map((q) => (
           <div
             key={q._id}
-            className="bg-white p-5 rounded shadow mb-4"
+            id={`q-${q._id}`}
+            tabIndex={-1}
+            className={`p-5 rounded shadow mb-4 ${q._id === highlightId ? "bg-yellow-100 border border-yellow-500" : "bg-white"}`}
           >
             <div className="flex justify-between">
               <h3 className="font-semibold text-lg">
@@ -277,12 +350,12 @@ const handleBack = () => {
                 <li
                   key={i}
                   className={`p-2 rounded mb-1 ${
-                    opt === q.answer
-                      ? "bg-green-100 text-green-700 font-semibold"
-                      : "bg-gray-100"
-                  }`}
-                >
-                  {opt} {opt === q.answer && "✅"}
+                          opt === q.answer && q.answer !== ""
+                            ? "bg-green-100 text-green-700 font-semibold"
+                            : "bg-gray-100"
+                        }`}
+                      >
+                        {opt} {opt === q.answer && q.answer !== "" && "✅"}
                 </li>
               ))}
             </ul>

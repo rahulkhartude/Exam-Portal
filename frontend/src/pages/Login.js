@@ -56,8 +56,8 @@ function Login() {
     }   
 
     return (
-        <div className="flex items-center justify-center h-screen bg-gray-100">
-            <div className="bg-white p-8 rounded shadow w-80">
+        <div className="flex items-center justify-center min-h-screen bg-gray-100 px-4">
+            <div className="bg-white p-6 sm:p-8 rounded shadow w-full max-w-md">
                 <h2 className="text-2xl font-bold mb-6 text-center">
                     Exam Portal
                 </h2>

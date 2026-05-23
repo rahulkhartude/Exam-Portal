@@ -1,10 +1,10 @@
  
 import React from 'react'
 
-const addQuestion = ({ question, setQuestion, options, setOptions, answer, setAnswer, editId, questionRef, handleOptionChange, handleSubmit, handleBack }) => {
+const AddQuestion = ({ question, setQuestion, options, setOptions, answer, setAnswer, editId, questionRef, handleOptionChange, handleSubmit, handleBack }) => {
+  console.log("edit id in the Add Question component: ", editId);
   return (
-    <div>
-        { <div className="bg-white p-6 rounded shadow max-w-lg mx-auto mb-8">
+    <div className="bg-white p-6 rounded shadow max-w-lg mx-auto mb-8">
         <h2 className="text-xl font-semibold mb-4">
           {editId ? "✏️ Edit Question" : "➕ Add Question"}
         </h2>
@@ -33,12 +33,12 @@ const addQuestion = ({ question, setQuestion, options, setOptions, answer, setAn
 
         <select
           className="border p-2 w-full mb-4 rounded"
-          value={answer}
+          value={answer || ""}
           onChange={(e) => setAnswer(e.target.value)}
         >
           <option value="">Select Correct Answer</option>
           {options.map((opt, i) => (
-            <option key={i} value={opt}>
+            <option key={i} value={opt} disabled={!opt}>
               {opt || `Option ${i + 1}`}
             </option>
           ))}
@@ -48,21 +48,18 @@ const addQuestion = ({ question, setQuestion, options, setOptions, answer, setAn
           onClick={handleSubmit}
           className="bg-blue-600 text-white px-4 py-2 rounded w-full hover:bg-blue-700"
         >
-          {editId ? "Update Question" : "Add Question"}
+          {editId ? "Update Question" : "Submit Question"}
         </button>
 
-     {editId && 
-       <button
+        <button
           onClick={handleBack}
-          className="bg-red-600 text-white px-4 py-2 rounded w-full mt-3"
+          className="bg-gray-500 text-white px-4 py-2 rounded w-full mt-3 hover:bg-gray-600"
         >
-          Back
-        </button> 
-}
+          Cancel
+        </button>
 
-      </div> }
-    </div>
+      </div>
   )
 }
 
-export default addQuestion
+export default AddQuestion

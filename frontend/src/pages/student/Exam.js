@@ -18,8 +18,7 @@ function Exam() {
   const [answers, setAnswers] = useState({});
   const [loading, setLoading] = useState(false);
 
-//tab changes logout
-
+  // 🔥 Tab change logout
   useEffect(() => {
     const handleVisibility = () => {
       if (document.visibilityState === "hidden") {
@@ -62,6 +61,14 @@ function Exam() {
   }
 
   const handleAnswer = (option) => {
+    if (option === null) {
+      // clear the answer for the current question
+      const newAnswers = { ...answers };
+      delete newAnswers[current];
+      setAnswers(newAnswers);
+      return;
+    }
+
     setAnswers({
       ...answers,
       [current]: option,
@@ -69,6 +76,11 @@ function Exam() {
   };
 
   const submitExam = async () => {
+    const confirmSubmit = window.confirm(
+      "Are you sure you want to submit the exam? You can return to review your answers if you cancel."
+    );
+    if (!confirmSubmit) return;
+
     try {
       setLoading(true);
 
@@ -77,18 +89,18 @@ function Exam() {
         selectedAnswer: answers[key],
       }));
 
-const res = await API.post(
-  "/result/submit",
-  {
-    answers: formattedAnswers,
-    user: JSON.parse(localStorage.getItem("user")),
-  },
-  {
-    headers: {
-      Authorization: `Bearer ${localStorage.getItem("token")}`,
-    },
-  }
-);
+      const res = await API.post(
+        "/result/submit",
+        {
+          answers: formattedAnswers,
+          user: JSON.parse(localStorage.getItem("user")),
+        },
+        {
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem("token")}`,
+          },
+        }
+      );
       alert("Exam Submitted Successfully");
 
       localStorage.setItem("score", res.data.score);
@@ -109,20 +121,20 @@ const res = await API.post(
     <div className="bg-gray-100 min-h-screen">
       <Navbar />
 
-      <div className="max-w-7xl mx-auto p-5">
+      <div className="max-w-7xl mx-auto p-4 sm:p-5">
         <div className="flex justify-end mb-4">
           <Timer duration={EXAMTIME} onTimeUp={submitExam} />
         </div>
 
-        <div className="grid grid-cols-4 gap-5">
-          <div className="col-span-3 bg-white p-6 rounded shadow">
+        <div className="grid grid-cols-1 lg:grid-cols-4 gap-5">
+          <div className="lg:col-span-3 bg-white p-6 rounded shadow">
             <QuestionCard
               question={questions[current]}
               selected={answers[current]}
               handleAnswer={handleAnswer}
             />
 
-            <div className="flex justify-between mt-8">
+            <div className="flex flex-col sm:flex-row justify-between gap-3 mt-8">
               <button
                 onClick={() => setCurrent(current - 1)}
                 disabled={current === 0}
@@ -131,11 +143,11 @@ const res = await API.post(
                 Previous
               </button>
 
-              <div className="flex gap-3">
+              <div className="flex flex-col sm:flex-row gap-3 w-full sm:w-auto">
                 <button
                   onClick={() => setCurrent(current + 1)}
                   disabled={current === questions.length - 1}
-                  className="bg-blue-600 text-white px-4 py-2 rounded disabled:opacity-50"
+                  className="bg-blue-600 text-white px-4 py-2 rounded disabled:opacity-50 w-full sm:w-auto"
                 >
                   Next
                 </button>
@@ -143,7 +155,7 @@ const res = await API.post(
                 <button
                   onClick={submitExam}
                   disabled={loading}
-                  className="bg-green-600 text-white px-4 py-2 rounded"
+                  className="bg-green-600 text-white px-4 py-2 rounded w-full sm:w-auto"
                 >
                   {loading ? "Submitting..." : "Submit Exam"}
                 </button>
