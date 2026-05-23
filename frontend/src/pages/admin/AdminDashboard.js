@@ -64,12 +64,10 @@ function AdminDashboard() {
   const fetchQuestions = async () => {
     try {
       const res = await API.get("/admin/allforAdmin");
-      console.log("Fetched Questions: ", res.data);
       const arr = shuffleArray(res.data);
       setQuestions(arr);
       return arr;
     } catch (err) {
-      console.log("--Error fetching questions:--", err);
       return [];
     }
   };
@@ -184,7 +182,6 @@ const handleLogout = () => {
 
   // ================= EDIT =================
   const handleEdit = (q) => {
-    console.log("Editing Question: ", q);
     setQuestion(q.question);
     setOptions(q.options);
     setAnswer(q.answer);

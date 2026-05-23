@@ -2,7 +2,6 @@
 import React from 'react'
 
 const AddQuestion = ({ question, setQuestion, options, setOptions, answer, setAnswer, editId, questionRef, handleOptionChange, handleSubmit, handleBack }) => {
-  console.log("edit id in the Add Question component: ", editId);
   return (
     <div className="bg-white p-6 rounded shadow max-w-lg mx-auto mb-8">
         <h2 className="text-xl font-semibold mb-4">

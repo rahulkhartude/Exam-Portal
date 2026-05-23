@@ -51,7 +51,7 @@ function Exam() {
     },
   })
     .then((res) => setQuestions(res.data))
-    .catch((err) => console.log(err));
+    .catch((err) => {});
 }, []);
    
   const user = JSON.parse(localStorage.getItem("user"));
@@ -107,7 +107,6 @@ function Exam() {
 
       navigate("/result");
     } catch (err) {
-      console.log(err);
       alert("Error submitting exam");
     } finally {
       setLoading(false);
